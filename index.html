@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#153b32">
+  <title>Boundary · Cricket scoreboard simulator</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/scoreboard.css">
+  <link rel="stylesheet" href="css/phone.css">
+  <link rel="stylesheet" href="css/panels.css">
+  <link rel="stylesheet" href="css/responsive.css">
+  <script type="module" src="js/app.js"></script>
+</head>
+<body>
+  <header class="page-header">
+    <div class="brand"><span class="brand-mark" aria-hidden="true">▥</span> boundary<span class="brand-divider"></span><span class="brand-caption">SCOREBOARD LAB</span></div>
+    <span class="local-badge"><span class="status-dot"></span> Local simulation</span>
+  </header>
+
+  <main>
+    <div class="intro">
+      <div><p class="eyebrow">CRICKET / CONTROLLER SIMULATOR</p><h1>Every run. In sync.</h1><p class="intro-text">Try your scoreboard before the first ball.</p></div>
+      <div class="intro-note"><span class="status-dot"></span> Controller online<span>One score. Two ways to control it.</span></div>
+    </div>
+
+    <div class="workspace">
+      <section class="board-column" aria-labelledby="board-heading">
+        <div class="section-heading"><h2 id="board-heading">The scoreboard</h2><span class="small-tag">10 DIGITS · LIVE</span></div>
+        <div class="scoreboard" role="group" aria-label="Live physical scoreboard">
+          <div class="board-topline"><span>BOUNDARY CRICKET CLUB</span><span class="board-led" aria-hidden="true"></span></div>
+          <div class="board-grid">
+            <div class="board-field"><h3>RUNS</h3><div class="digits" data-display="runs" role="img" aria-label="Runs 0"></div></div>
+            <div class="board-field"><h3>WICKETS</h3><div class="digits" data-display="wickets" role="img" aria-label="Wickets 0"></div></div>
+            <div class="board-field"><h3>OVERS</h3><div class="digits" data-display="overs" role="img" aria-label="Overs 0"></div></div>
+            <div class="board-field target-display"><h3>TO WIN</h3><div class="digits" data-display="target" role="img" aria-label="To win 0"></div></div>
+          </div>
+          <div class="board-bottomline"><span>WHOLE OVERS</span><span>TO WIN = FIXED TARGET</span></div>
+        </div>
+
+        <section class="physical-panel" aria-labelledby="physical-heading">
+          <div class="panel-heading"><div><p class="eyebrow">ON THE ENCLOSURE</p><h2 id="physical-heading">Physical controls</h2></div><span class="small-tag">12 BUTTONS</span></div>
+          <p class="panel-description">Press + or − once. Hold a reset for 2 seconds.</p>
+          <div id="physical-controls"></div>
+          <p class="physical-help">Release early to cancel. Use a mouse, touch, or focus a reset and hold Space / Enter.</p>
+        </section>
+      </section>
+
+      <section class="phone-panel" aria-labelledby="phone-heading">
+        <div class="phone-heading"><div><p class="eyebrow">IN YOUR HAND</p><h2 id="phone-heading">Phone controls</h2></div><span id="connection-badge" class="connected-badge"><span class="status-dot"></span> Connected</span></div>
+        <div class="phone-score" aria-label="Phone received score">
+          <div class="phone-main-score"><span id="phone-runs">0</span><span class="score-slash">/</span><span id="phone-wickets">0</span><span class="score-caption">RUNS / WICKETS</span></div>
+          <div class="phone-other-score"><div><span id="phone-overs">0</span><small>OVERS</small></div><div><span id="phone-target">0</span><small>TO WIN</small></div></div>
+        </div>
+        <p id="phone-sync-note" class="sync-note">Live from the controller</p>
+        <fieldset id="phone-command-controls">
+          <legend class="sr-only">Phone scoring commands</legend>
+          <div class="phone-field-heading"><h3>Runs</h3><span>0–999</span></div>
+          <div class="run-buttons">
+            <button type="button" class="score-button run-primary" data-phone-field="runs" data-amount="1" aria-label="Phone: add 1 run">+1</button>
+            <button type="button" class="score-button run-primary" data-phone-field="runs" data-amount="4" aria-label="Phone: add 4 runs">+4</button>
+            <button type="button" class="score-button run-primary" data-phone-field="runs" data-amount="6" aria-label="Phone: add 6 runs">+6</button>
+            <button type="button" class="score-button" data-phone-field="runs" data-amount="-1" aria-label="Phone: subtract 1 run">−1</button>
+          </div>
+          <div class="paired-fields">
+            <div><div class="phone-field-heading"><h3>Wickets</h3><span>0–10</span></div><div class="two-buttons"><button type="button" class="score-button" data-phone-field="wickets" data-amount="1" aria-label="Phone: add 1 wicket">+1</button><button type="button" class="score-button" data-phone-field="wickets" data-amount="-1" aria-label="Phone: subtract 1 wicket">−1</button></div></div>
+            <div><div class="phone-field-heading"><h3>Overs</h3><span>0–99</span></div><div class="two-buttons"><button type="button" class="score-button" data-phone-field="overs" data-amount="1" aria-label="Phone: add 1 over">+1</button><button type="button" class="score-button" data-phone-field="overs" data-amount="-1" aria-label="Phone: subtract 1 over">−1</button></div></div>
+          </div>
+          <div class="target-control"><div><h3>Target to win</h3><p>Fixed until you change it.</p></div><button type="button" class="subtle-button" id="edit-target">Set target</button></div>
+          <div class="phone-tools"><button type="button" id="undo" class="subtle-button">↶ Undo</button><button type="button" id="correct" class="subtle-button">Edit score</button></div>
+          <section class="inline-editor" data-dialog hidden role="region" id="edit-dialog" aria-labelledby="edit-title">
+            <form id="edit-form" novalidate>
+              <p class="eyebrow">DIRECT CORRECTION</p><h2 id="edit-title">Edit score</h2><p>Set an exact value. This change can be undone.</p>
+              <label for="edit-field">Score field</label><select id="edit-field" name="field"><option value="runs">Runs</option><option value="wickets">Wickets</option><option value="overs">Overs</option><option value="target">Target to win</option></select>
+              <label id="edit-value-label" for="edit-value">Value (0–999)</label><input id="edit-value" name="value" type="text" inputmode="numeric" autocomplete="off" required>
+              <p id="edit-error" class="form-error" role="alert"></p>
+              <div class="dialog-actions"><button type="button" class="subtle-button" data-close-dialog>Cancel</button><button type="submit" class="primary-button">Save value</button></div>
+            </form>
+          </section>
+          <p id="undo-note" class="undo-note">No actions to undo</p>
+          <button type="button" id="new-innings" class="new-innings-button">New innings <span aria-hidden="true">→</span></button>
+          <section class="inline-editor" data-dialog hidden role="region" id="innings-dialog" aria-labelledby="innings-title">
+            <form id="innings-form" novalidate>
+              <p class="eyebrow">A FRESH START</p><h2 id="innings-title">Start a new innings?</h2><p>Runs, wickets and overs will return to zero. Choose the target explicitly. The whole action can be undone.</p>
+              <fieldset class="target-choices"><legend>Target for this innings</legend>
+                <label><input type="radio" name="target-choice" value="keep"> Keep current target (<span id="innings-current-target">0</span>)</label>
+                <label><input type="radio" name="target-choice" value="zero"> Clear target to 0</label>
+                <label><input type="radio" name="target-choice" value="custom"> Set a new target</label>
+              </fieldset>
+              <label for="innings-target">New target (0–999)</label><input id="innings-target" type="text" inputmode="numeric" autocomplete="off" disabled>
+              <p id="innings-error" class="form-error" role="alert"></p>
+              <div class="dialog-actions"><button type="button" class="subtle-button" data-close-dialog>Cancel</button><button type="submit" class="primary-button">Confirm new innings</button></div>
+            </form>
+          </section>
+        </fieldset>
+        <div class="connection-control"><div><strong>Test the connection</strong><p>The board keeps working offline.</p></div><button type="button" id="toggle-connection" class="subtle-button">Disconnect phone</button></div>
+      </section>
+    </div>
+
+    <div class="feedback-row"><p id="action-status" role="status" aria-live="polite">Ready for the first ball.</p><span id="history-count">0 actions in history</span></div>
+    <p id="storage-warning" role="alert" hidden></p>
+    <footer><p><span class="status-dot"></span> <span id="storage-status">Saved in this browser</span> <span class="footer-divider">/</span> No hardware required</p><button type="button" id="clear-data">Clear saved simulation data</button></footer>
+    <section class="inline-editor" data-dialog hidden role="region" id="clear-dialog" aria-labelledby="clear-title">
+      <form id="clear-form"><p class="eyebrow">SIMULATION DATA</p><h2 id="clear-title">Clear saved data?</h2><p>This clears all four fields and the undo history, and removes this simulator’s saved data from the browser. This cannot be undone.</p><div class="dialog-actions"><button type="button" class="subtle-button" data-close-dialog>Cancel</button><button type="submit" class="danger-button">Clear simulation data</button></div></form>
+    </section>
+  </main>
+
+</body>
+</html>

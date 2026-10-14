@@ -1,0 +1,243 @@
+.phone-panel {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 26px;
+  box-shadow: 0 4px 20px #1f312606;
+}
+
+.phone-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+.phone-heading .eyebrow {
+  font-size: 9px;
+  margin-bottom: 6px;
+}
+
+.connected-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid #e2e8dd;
+  border-radius: 20px;
+  padding: 6px 9px;
+  background: #f3f7ef;
+  color: #4e6f44;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.connected-badge.offline {
+  color: #805c33;
+  background: #faf2e5;
+  border-color: #eddfc9;
+}
+
+.offline .status-dot {
+  background: #b88843;
+}
+
+.phone-score {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 21px 20px;
+  border-radius: 10px;
+  background: #edf2e9;
+  margin-top: 24px;
+  gap: 12px;
+}
+
+.phone-main-score {
+  font-size: 38px;
+  letter-spacing: -1.5px;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+  font-weight: 650;
+  white-space: nowrap;
+}
+
+.score-slash {
+  font-size: 28px;
+  color: #8a9d83;
+  font-weight: 400;
+  margin: 0 3px;
+}
+
+.score-caption {
+  display: block;
+  font-size: 8px;
+  letter-spacing: 1.5px;
+  color: #68785e;
+  margin-top: 9px;
+  font-weight: 600;
+}
+
+.phone-other-score {
+  display: flex;
+  gap: 20px;
+  text-align: center;
+  font-size: 21px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+
+.phone-other-score small {
+  display: block;
+  font-size: 8px;
+  letter-spacing: 1.2px;
+  margin-top: 6px;
+  color: #68785e;
+}
+
+.sync-note {
+  font-size: 10px;
+  text-align: right;
+  color: var(--muted);
+  margin: 8px 0 23px;
+}
+
+fieldset {
+  padding: 0;
+  margin: 0;
+  border: 0;
+  min-width: 0;
+}
+
+.phone-field-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  gap: 8px;
+}
+
+.phone-field-heading h3, .target-control h3 {
+  font-size: 13px;
+  margin: 0;
+  font-weight: 650;
+}
+
+.phone-field-heading span {
+  font-size: 10px;
+  color: #83917f;
+}
+
+.run-buttons {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 9px;
+}
+
+.score-button {
+  min-height: 60px;
+  background: #f5f7f1;
+  font-size: 22px;
+  font-weight: 600;
+}
+
+.run-primary {
+  color: white;
+  background: var(--green);
+  border-color: var(--green);
+}
+
+.run-primary:hover {
+  background: #174b36;
+  color: white;
+}
+
+.paired-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 19px;
+  margin-top: 23px;
+}
+
+.two-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 9px;
+}
+
+.target-control {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 24px 0;
+  padding-bottom: 21px;
+  border-bottom: 1px solid var(--border);
+}
+
+.target-control p {
+  color: var(--muted);
+  font-size: 10px;
+  margin: 6px 0 0;
+}
+
+.subtle-button {
+  font-size: 12px;
+  padding: 10px 13px;
+  background: #fafbf7;
+}
+
+.target-control .subtle-button {
+  white-space: nowrap;
+}
+
+.target-control span {
+  margin-left: 8px;
+}
+
+.phone-tools {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.undo-note {
+  font-size: 10px;
+  color: var(--muted);
+  margin: 9px 0 18px;
+  min-height: 14px;
+}
+
+.new-innings-button {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  padding: 13px 16px;
+  min-height: 46px;
+  font-size: 12px;
+}
+
+.connection-control {
+  margin-top: 25px;
+  border-top: 1px solid var(--border);
+  padding-top: 21px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.connection-control strong {
+  font-size: 10px;
+}
+
+.connection-control p {
+  color: var(--muted);
+  font-size: 9px;
+  margin: 5px 0 0;
+}
+
+.connection-control button {
+  font-size: 10px;
+  padding: 10px;
+  white-space: nowrap;
+}

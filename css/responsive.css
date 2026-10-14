@@ -1,0 +1,203 @@
+@media (min-width: 1500px) {
+  .digits {
+    height: 104px;
+  }
+}
+
+@media (max-width: 1000px) {
+  .workspace {
+    gap: 22px;
+    grid-template-columns: minmax(0, 1.2fr) minmax(330px, 1fr);
+  }
+  .scoreboard {
+    padding: 20px 18px 16px;
+  }
+  .physical-panel {
+    padding: 20px 18px;
+  }
+  .physical-row {
+    grid-template-columns: 1fr 44px 44px 105px;
+    gap: 8px;
+  }
+  .phone-panel {
+    padding: 22px;
+  }
+  .phone-other-score {
+    gap: 14px;
+  }
+  .phone-score {
+    padding: 20px 14px;
+  }
+  .phone-main-score {
+    font-size: 34px;
+  }
+}
+
+@media (max-width: 780px) {
+  .workspace {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+  .digits {
+    height: 100px;
+  }
+  .intro-note {
+    display: none;
+  }
+  main {
+    max-width: 620px;
+    padding-top: 30px;
+  }
+  .intro {
+    margin-bottom: 28px;
+  }
+  .phone-panel {
+    padding: 24px;
+    order: -1;
+  }
+  .physical-row {
+    grid-template-columns: 1fr 52px 52px 130px;
+  }
+  .phone-score {
+    padding: 23px;
+  }
+  .phone-main-score {
+    font-size: 42px;
+  }
+  .phone-other-score {
+    gap: 24px;
+  }
+  .phone-tools .subtle-button {
+    min-height: 48px;
+  }
+}
+
+@media (max-width: 480px) {
+  .page-header {
+    padding: 17px 18px;
+    min-height: 68px;
+  }
+  .brand {
+    font-size: 22px;
+    gap: 8px;
+  }
+  .brand-divider, .brand-caption {
+    display: none;
+  }
+  .local-badge {
+    font-size: 10px;
+  }
+  main {
+    padding: 26px 16px 0;
+  }
+  h1 {
+    font-size: 33px;
+  }
+  .intro-text {
+    font-size: 12px;
+  }
+  .scoreboard {
+    padding: 17px 14px 14px;
+    border-width: 5px;
+  }
+  .board-topline {
+    font-size: 7px;
+    letter-spacing: 1.6px;
+  }
+  .board-grid {
+    gap: 20px 12px;
+    padding: 22px 0;
+  }
+  .digits {
+    height: 76px;
+    gap: 3px;
+  }
+  .board-field h3 {
+    font-size: 10px;
+    letter-spacing: 2px;
+  }
+  .board-bottomline {
+    font-size: 6px;
+    letter-spacing: .8px;
+  }
+  .physical-panel {
+    padding: 19px 15px 15px;
+  }
+  .physical-row {
+    grid-template-columns: 1fr 44px 44px 110px;
+    gap: 7px;
+  }
+  .physical-label {
+    font-size: 12px;
+  }
+  .physical-label small {
+    font-size: 8px;
+  }
+  .phone-panel {
+    padding: 22px 18px;
+  }
+  .phone-score {
+    padding: 20px 15px;
+  }
+  .phone-main-score {
+    font-size: 36px;
+  }
+  .phone-other-score {
+    gap: 18px;
+    font-size: 21px;
+  }
+  .paired-fields {
+    gap: 15px;
+  }
+  .connection-control {
+    gap: 8px;
+  }
+  .feedback-row {
+    align-items: flex-start;
+  }
+  .feedback-row p {
+    line-height: 1.6;
+  }
+  .feedback-row > span {
+    margin-top: 4px;
+    font-size: 9px;
+  }
+  footer {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 3px;
+  }
+  .footer-divider {
+    padding: 0 5px;
+  }
+}
+
+@media (max-width: 350px) {
+  .physical-row {
+    grid-template-columns: 1fr 44px 44px 92px;
+    gap: 5px;
+  }
+  .hold-button {
+    font-size: 10px;
+  }
+  .phone-main-score {
+    font-size: 31px;
+  }
+  .phone-other-score {
+    gap: 12px;
+    font-size: 19px;
+  }
+  .connected-badge {
+    font-size: 9px;
+    padding: 6px;
+  }
+  .board-bottomline {
+    letter-spacing: .2px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+  }
+}

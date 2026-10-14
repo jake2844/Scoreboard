@@ -1,0 +1,116 @@
+/* Ordinary in-page forms: no native dialog or browser popup needed. */
+.inline-editor[hidden] {
+  display: none;
+}
+
+.inline-editor {
+  margin: 18px 0;
+  padding: 18px;
+  background: #f0f4eb;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.inline-editor form {
+  width: 100%;
+}
+
+.inline-editor .dialog-actions {
+  flex-wrap: wrap;
+}
+
+#clear-dialog {
+  max-width: 520px;
+}
+
+.inline-editor h2 {
+  font-size: 23px;
+}
+
+.inline-editor p {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.inline-editor label, .inline-editor legend {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  margin: 17px 0 8px;
+}
+
+.inline-editor select, .inline-editor input[type="text"] {
+  width: 100%;
+  border: 1px solid #b4c3b3;
+  border-radius: 7px;
+  padding: 12px;
+  min-height: 48px;
+  font-size: 16px;
+  color: var(--ink);
+  background: white;
+}
+
+.inline-editor input:disabled {
+  background: #eff2eb;
+  color: #84917d;
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+.primary-button, .danger-button {
+  padding: 12px 16px;
+  color: white;
+  background: var(--green);
+  border-color: var(--green);
+  font-size: 12px;
+}
+
+.primary-button:hover {
+  color: white;
+  background: #16422e;
+}
+
+.danger-button {
+  background: #9c412e;
+  border-color: #9c412e;
+}
+
+.danger-button:hover {
+  color: white;
+  background: #7b2d1d;
+}
+
+.target-choices label {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  gap: 10px;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  margin: 8px 0;
+  font-weight: 400;
+}
+
+.target-choices label span {
+  margin-left: -6px;
+}
+
+.target-choices input {
+  accent-color: var(--green);
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  margin: 0;
+}
+
+.form-error {
+  min-height: 20px;
+  margin-bottom: 0;
+}

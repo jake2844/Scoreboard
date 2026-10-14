@@ -1,0 +1,1894 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#153b32">
+  <title>Boundary · Cricket scoreboard simulator</title>
+  <link rel="icon" href="data:,">
+  <style>
+/* Source: css/base.css */
+:root {
+  color-scheme: light;
+  --ink: #193a32;
+  --muted: #67766f;
+  --green: #245e49;
+  --border: #dce3dc;
+  --paper: #f5f6f1;
+  --amber: #ffb448;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+}
+
+button, input, select {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+  min-height: 44px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--ink);
+  background: white;
+  font-weight: 650;
+  transition: background .15s, border-color .15s;
+}
+
+button:hover {
+  background: #eaf0e9;
+  border-color: #9dae9f;
+}
+
+button:active {
+  transform: translateY(1px);
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: .42;
+}
+
+button:disabled:active {
+  transform: none;
+}
+
+:focus-visible {
+  outline: 3px solid #c67915;
+  outline-offset: 4px;
+}
+
+.page-header {
+  min-height: 84px;
+  border-bottom: 1px solid var(--border);
+  padding: 22px max(24px, calc((100vw - 1256px) / 2));
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  background: #fafbf7;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 25px;
+  font-weight: 760;
+  letter-spacing: -.9px;
+}
+
+.brand-mark {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  color: white;
+  background: var(--green);
+  border-radius: 7px;
+  font-size: 23px;
+}
+
+.brand-divider {
+  height: 20px;
+  width: 1px;
+  background: #cbd5cc;
+  margin: 0 6px;
+}
+
+.brand-caption {
+  font-size: 10px;
+  letter-spacing: 1.9px;
+  color: var(--muted);
+  font-weight: 650;
+}
+
+.local-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.status-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  background: #407f50;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+main {
+  max-width: 1304px;
+  padding: 42px 24px 0;
+  margin: auto;
+}
+
+.intro {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 38px;
+}
+
+.eyebrow {
+  margin: 0 0 9px;
+  font-size: 10px;
+  letter-spacing: 1.8px;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+h1 {
+  font-size: clamp(30px, 4vw, 42px);
+  letter-spacing: -1.8px;
+  margin: 0;
+  font-weight: 650;
+  line-height: 1.15;
+}
+
+.intro-text {
+  color: var(--muted);
+  font-size: 14px;
+  margin: 12px 0 0;
+}
+
+.intro-note {
+  font-size: 12px;
+  font-weight: 600;
+  text-align: right;
+}
+
+.intro-note > span:last-child {
+  display: block;
+  color: var(--muted);
+  font-weight: 400;
+  margin-top: 7px;
+}
+
+.intro-note .status-dot {
+  margin-right: 6px;
+}
+
+.workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(330px, 1fr);
+  gap: 30px;
+  align-items: start;
+}
+
+.section-heading, .panel-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+h2 {
+  font-size: 18px;
+  letter-spacing: -.4px;
+  font-weight: 650;
+  margin: 0;
+}
+
+.section-heading {
+  margin-bottom: 16px;
+}
+
+.small-tag {
+  font-size: 9px;
+  letter-spacing: 1.1px;
+  color: var(--muted);
+  font-weight: 650;
+  white-space: nowrap;
+}
+
+.feedback-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 15px;
+  font-size: 12px;
+  padding: 16px 0;
+  min-height: 56px;
+}
+
+.feedback-row p {
+  margin: 0;
+}
+
+.feedback-row > span {
+  color: var(--muted);
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+#action-status.error, .form-error {
+  color: #a43f28;
+}
+
+#storage-warning {
+  background: #fff0d9;
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 12px;
+}
+
+footer {
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  color: var(--muted);
+  padding: 18px 0 24px;
+  font-size: 10px;
+}
+
+footer p {
+  margin: 0;
+}
+
+footer .status-dot {
+  margin-right: 5px;
+}
+
+.footer-divider {
+  padding: 0 9px;
+  color: #b3bcac;
+}
+
+footer button {
+  background: transparent;
+  border: 0;
+  color: var(--muted);
+  font-size: 10px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  padding: 8px 0;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0,0,0,0);
+  white-space: nowrap;
+  border: 0;
+}
+</style>
+  <style>
+/* Source: css/scoreboard.css */
+.scoreboard {
+  background: #162720;
+  color: #e5eadc;
+  border-radius: 13px;
+  padding: 21px 30px 17px;
+  border: 6px solid #24362d;
+  box-shadow: 0 10px 24px #1c332315, inset 0 0 40px #0003;
+  position: relative;
+}
+
+.scoreboard::before, .scoreboard::after {
+  content: '';
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #86917b;
+  top: 12px;
+}
+
+.scoreboard::before {
+  left: 12px;
+}
+
+.scoreboard::after {
+  right: 12px;
+}
+
+.board-topline, .board-bottomline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #a5b2a4;
+  font-size: 8px;
+  letter-spacing: 2px;
+}
+
+.board-topline {
+  padding-bottom: 17px;
+  border-bottom: 1px solid #35443a;
+}
+
+.board-led {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #9dca7a;
+  box-shadow: 0 0 8px #9dca7a77;
+}
+
+.board-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 22px 26px;
+  padding: 23px 0 25px;
+}
+
+.board-field {
+  min-width: 0;
+  text-align: center;
+}
+
+.board-field h3 {
+  font-size: 12px;
+  letter-spacing: 3.2px;
+  font-weight: 600;
+  margin: 0 0 10px;
+}
+
+.digits {
+  display: flex;
+  justify-content: center;
+  gap: 5px;
+  height: clamp(68px, 7vw, 98px);
+}
+
+.seven-segment {
+  height: 100%;
+  width: auto;
+  max-width: 30%;
+  overflow: visible;
+}
+
+.segment {
+  fill: #26352a;
+}
+
+.segment.lit {
+  fill: var(--amber);
+  filter: drop-shadow(0 0 2px #ffb44888);
+}
+
+.target-display .segment.lit {
+  fill: #b7d889;
+  filter: drop-shadow(0 0 2px #b7d88977);
+}
+
+.board-bottomline {
+  border-top: 1px solid #35443a;
+  padding-top: 14px;
+  font-size: 7px;
+  letter-spacing: 1.25px;
+}
+
+.physical-panel {
+  margin-top: 26px;
+  background: #fff;
+  border: 1px solid var(--border);
+  padding: 22px 24px 16px;
+  border-radius: 12px;
+}
+
+.panel-heading .eyebrow {
+  margin-bottom: 5px;
+  font-size: 9px;
+}
+
+.panel-description, .physical-help {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.panel-description {
+  margin: 13px 0 16px;
+}
+
+.physical-help {
+  margin: 17px 0 0;
+  font-size: 11px;
+}
+
+.physical-row {
+  display: grid;
+  grid-template-columns: 1fr 48px 48px 120px;
+  gap: 10px;
+  align-items: center;
+  padding: 9px 0;
+  border-bottom: 1px solid #edf0eb;
+}
+
+.physical-row:last-child {
+  border-bottom: 0;
+}
+
+.physical-label {
+  font-weight: 650;
+  font-size: 13px;
+}
+
+.physical-label small {
+  display: block;
+  color: #778579;
+  font-size: 9px;
+  font-weight: 400;
+  letter-spacing: .4px;
+  margin-top: 4px;
+}
+
+.physical-step {
+  font-size: 22px;
+  background: #f3f5ef;
+}
+
+.hold-button {
+  position: relative;
+  overflow: hidden;
+  background: #fafbf6;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  font-size: 11px;
+}
+
+.hold-progress {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: calc(var(--hold-progress, 0) * 100%);
+  background: #ceddcc;
+  pointer-events: none;
+}
+
+.hold-label {
+  position: relative;
+  pointer-events: none;
+}
+
+.hold-button.holding {
+  border-color: #61835b;
+}
+</style>
+  <style>
+/* Source: css/phone.css */
+.phone-panel {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 26px;
+  box-shadow: 0 4px 20px #1f312606;
+}
+
+.phone-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+.phone-heading .eyebrow {
+  font-size: 9px;
+  margin-bottom: 6px;
+}
+
+.connected-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid #e2e8dd;
+  border-radius: 20px;
+  padding: 6px 9px;
+  background: #f3f7ef;
+  color: #4e6f44;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.connected-badge.offline {
+  color: #805c33;
+  background: #faf2e5;
+  border-color: #eddfc9;
+}
+
+.offline .status-dot {
+  background: #b88843;
+}
+
+.phone-score {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 21px 20px;
+  border-radius: 10px;
+  background: #edf2e9;
+  margin-top: 24px;
+  gap: 12px;
+}
+
+.phone-main-score {
+  font-size: 38px;
+  letter-spacing: -1.5px;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+  font-weight: 650;
+  white-space: nowrap;
+}
+
+.score-slash {
+  font-size: 28px;
+  color: #8a9d83;
+  font-weight: 400;
+  margin: 0 3px;
+}
+
+.score-caption {
+  display: block;
+  font-size: 8px;
+  letter-spacing: 1.5px;
+  color: #68785e;
+  margin-top: 9px;
+  font-weight: 600;
+}
+
+.phone-other-score {
+  display: flex;
+  gap: 20px;
+  text-align: center;
+  font-size: 21px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+
+.phone-other-score small {
+  display: block;
+  font-size: 8px;
+  letter-spacing: 1.2px;
+  margin-top: 6px;
+  color: #68785e;
+}
+
+.sync-note {
+  font-size: 10px;
+  text-align: right;
+  color: var(--muted);
+  margin: 8px 0 23px;
+}
+
+fieldset {
+  padding: 0;
+  margin: 0;
+  border: 0;
+  min-width: 0;
+}
+
+.phone-field-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  gap: 8px;
+}
+
+.phone-field-heading h3, .target-control h3 {
+  font-size: 13px;
+  margin: 0;
+  font-weight: 650;
+}
+
+.phone-field-heading span {
+  font-size: 10px;
+  color: #83917f;
+}
+
+.run-buttons {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 9px;
+}
+
+.score-button {
+  min-height: 60px;
+  background: #f5f7f1;
+  font-size: 22px;
+  font-weight: 600;
+}
+
+.run-primary {
+  color: white;
+  background: var(--green);
+  border-color: var(--green);
+}
+
+.run-primary:hover {
+  background: #174b36;
+  color: white;
+}
+
+.paired-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 19px;
+  margin-top: 23px;
+}
+
+.two-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 9px;
+}
+
+.target-control {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 24px 0;
+  padding-bottom: 21px;
+  border-bottom: 1px solid var(--border);
+}
+
+.target-control p {
+  color: var(--muted);
+  font-size: 10px;
+  margin: 6px 0 0;
+}
+
+.subtle-button {
+  font-size: 12px;
+  padding: 10px 13px;
+  background: #fafbf7;
+}
+
+.target-control .subtle-button {
+  white-space: nowrap;
+}
+
+.target-control span {
+  margin-left: 8px;
+}
+
+.phone-tools {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.undo-note {
+  font-size: 10px;
+  color: var(--muted);
+  margin: 9px 0 18px;
+  min-height: 14px;
+}
+
+.new-innings-button {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  padding: 13px 16px;
+  min-height: 46px;
+  font-size: 12px;
+}
+
+.connection-control {
+  margin-top: 25px;
+  border-top: 1px solid var(--border);
+  padding-top: 21px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.connection-control strong {
+  font-size: 10px;
+}
+
+.connection-control p {
+  color: var(--muted);
+  font-size: 9px;
+  margin: 5px 0 0;
+}
+
+.connection-control button {
+  font-size: 10px;
+  padding: 10px;
+  white-space: nowrap;
+}
+</style>
+  <style>
+/* Source: css/panels.css */
+/* Ordinary in-page forms: no native dialog or browser popup needed. */
+.inline-editor[hidden] {
+  display: none;
+}
+
+.inline-editor {
+  margin: 18px 0;
+  padding: 18px;
+  background: #f0f4eb;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.inline-editor form {
+  width: 100%;
+}
+
+.inline-editor .dialog-actions {
+  flex-wrap: wrap;
+}
+
+#clear-dialog {
+  max-width: 520px;
+}
+
+.inline-editor h2 {
+  font-size: 23px;
+}
+
+.inline-editor p {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.inline-editor label, .inline-editor legend {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  margin: 17px 0 8px;
+}
+
+.inline-editor select, .inline-editor input[type="text"] {
+  width: 100%;
+  border: 1px solid #b4c3b3;
+  border-radius: 7px;
+  padding: 12px;
+  min-height: 48px;
+  font-size: 16px;
+  color: var(--ink);
+  background: white;
+}
+
+.inline-editor input:disabled {
+  background: #eff2eb;
+  color: #84917d;
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+.primary-button, .danger-button {
+  padding: 12px 16px;
+  color: white;
+  background: var(--green);
+  border-color: var(--green);
+  font-size: 12px;
+}
+
+.primary-button:hover {
+  color: white;
+  background: #16422e;
+}
+
+.danger-button {
+  background: #9c412e;
+  border-color: #9c412e;
+}
+
+.danger-button:hover {
+  color: white;
+  background: #7b2d1d;
+}
+
+.target-choices label {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  gap: 10px;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  margin: 8px 0;
+  font-weight: 400;
+}
+
+.target-choices label span {
+  margin-left: -6px;
+}
+
+.target-choices input {
+  accent-color: var(--green);
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  margin: 0;
+}
+
+.form-error {
+  min-height: 20px;
+  margin-bottom: 0;
+}
+</style>
+  <style>
+/* Source: css/responsive.css */
+@media (min-width: 1500px) {
+  .digits {
+    height: 104px;
+  }
+}
+
+@media (max-width: 1000px) {
+  .workspace {
+    gap: 22px;
+    grid-template-columns: minmax(0, 1.2fr) minmax(330px, 1fr);
+  }
+  .scoreboard {
+    padding: 20px 18px 16px;
+  }
+  .physical-panel {
+    padding: 20px 18px;
+  }
+  .physical-row {
+    grid-template-columns: 1fr 44px 44px 105px;
+    gap: 8px;
+  }
+  .phone-panel {
+    padding: 22px;
+  }
+  .phone-other-score {
+    gap: 14px;
+  }
+  .phone-score {
+    padding: 20px 14px;
+  }
+  .phone-main-score {
+    font-size: 34px;
+  }
+}
+
+@media (max-width: 780px) {
+  .workspace {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+  .digits {
+    height: 100px;
+  }
+  .intro-note {
+    display: none;
+  }
+  main {
+    max-width: 620px;
+    padding-top: 30px;
+  }
+  .intro {
+    margin-bottom: 28px;
+  }
+  .phone-panel {
+    padding: 24px;
+    order: -1;
+  }
+  .physical-row {
+    grid-template-columns: 1fr 52px 52px 130px;
+  }
+  .phone-score {
+    padding: 23px;
+  }
+  .phone-main-score {
+    font-size: 42px;
+  }
+  .phone-other-score {
+    gap: 24px;
+  }
+  .phone-tools .subtle-button {
+    min-height: 48px;
+  }
+}
+
+@media (max-width: 480px) {
+  .page-header {
+    padding: 17px 18px;
+    min-height: 68px;
+  }
+  .brand {
+    font-size: 22px;
+    gap: 8px;
+  }
+  .brand-divider, .brand-caption {
+    display: none;
+  }
+  .local-badge {
+    font-size: 10px;
+  }
+  main {
+    padding: 26px 16px 0;
+  }
+  h1 {
+    font-size: 33px;
+  }
+  .intro-text {
+    font-size: 12px;
+  }
+  .scoreboard {
+    padding: 17px 14px 14px;
+    border-width: 5px;
+  }
+  .board-topline {
+    font-size: 7px;
+    letter-spacing: 1.6px;
+  }
+  .board-grid {
+    gap: 20px 12px;
+    padding: 22px 0;
+  }
+  .digits {
+    height: 76px;
+    gap: 3px;
+  }
+  .board-field h3 {
+    font-size: 10px;
+    letter-spacing: 2px;
+  }
+  .board-bottomline {
+    font-size: 6px;
+    letter-spacing: .8px;
+  }
+  .physical-panel {
+    padding: 19px 15px 15px;
+  }
+  .physical-row {
+    grid-template-columns: 1fr 44px 44px 110px;
+    gap: 7px;
+  }
+  .physical-label {
+    font-size: 12px;
+  }
+  .physical-label small {
+    font-size: 8px;
+  }
+  .phone-panel {
+    padding: 22px 18px;
+  }
+  .phone-score {
+    padding: 20px 15px;
+  }
+  .phone-main-score {
+    font-size: 36px;
+  }
+  .phone-other-score {
+    gap: 18px;
+    font-size: 21px;
+  }
+  .paired-fields {
+    gap: 15px;
+  }
+  .connection-control {
+    gap: 8px;
+  }
+  .feedback-row {
+    align-items: flex-start;
+  }
+  .feedback-row p {
+    line-height: 1.6;
+  }
+  .feedback-row > span {
+    margin-top: 4px;
+    font-size: 9px;
+  }
+  footer {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 3px;
+  }
+  .footer-divider {
+    padding: 0 5px;
+  }
+}
+
+@media (max-width: 350px) {
+  .physical-row {
+    grid-template-columns: 1fr 44px 44px 92px;
+    gap: 5px;
+  }
+  .hold-button {
+    font-size: 10px;
+  }
+  .phone-main-score {
+    font-size: 31px;
+  }
+  .phone-other-score {
+    gap: 12px;
+    font-size: 19px;
+  }
+  .connected-badge {
+    font-size: 9px;
+    padding: 6px;
+  }
+  .board-bottomline {
+    letter-spacing: .2px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+  }
+}
+</style>
+</head>
+<body>
+  <header class="page-header">
+    <div class="brand"><span class="brand-mark" aria-hidden="true">▥</span> boundary<span class="brand-divider"></span><span class="brand-caption">SCOREBOARD LAB</span></div>
+    <span class="local-badge"><span class="status-dot"></span> Local simulation</span>
+  </header>
+
+  <main>
+    <div class="intro">
+      <div><p class="eyebrow">CRICKET / CONTROLLER SIMULATOR</p><h1>Every run. In sync.</h1><p class="intro-text">Try your scoreboard before the first ball.</p></div>
+      <div class="intro-note"><span class="status-dot"></span> Controller online<span>One score. Two ways to control it.</span></div>
+    </div>
+
+    <div class="workspace">
+      <section class="board-column" aria-labelledby="board-heading">
+        <div class="section-heading"><h2 id="board-heading">The scoreboard</h2><span class="small-tag">10 DIGITS · LIVE</span></div>
+        <div class="scoreboard" role="group" aria-label="Live physical scoreboard">
+          <div class="board-topline"><span>BOUNDARY CRICKET CLUB</span><span class="board-led" aria-hidden="true"></span></div>
+          <div class="board-grid">
+            <div class="board-field"><h3>RUNS</h3><div class="digits" data-display="runs" role="img" aria-label="Runs 0"></div></div>
+            <div class="board-field"><h3>WICKETS</h3><div class="digits" data-display="wickets" role="img" aria-label="Wickets 0"></div></div>
+            <div class="board-field"><h3>OVERS</h3><div class="digits" data-display="overs" role="img" aria-label="Overs 0"></div></div>
+            <div class="board-field target-display"><h3>TO WIN</h3><div class="digits" data-display="target" role="img" aria-label="To win 0"></div></div>
+          </div>
+          <div class="board-bottomline"><span>WHOLE OVERS</span><span>TO WIN = FIXED TARGET</span></div>
+        </div>
+
+        <section class="physical-panel" aria-labelledby="physical-heading">
+          <div class="panel-heading"><div><p class="eyebrow">ON THE ENCLOSURE</p><h2 id="physical-heading">Physical controls</h2></div><span class="small-tag">12 BUTTONS</span></div>
+          <p class="panel-description">Press + or − once. Hold a reset for 2 seconds.</p>
+          <div id="physical-controls"></div>
+          <p class="physical-help">Release early to cancel. Use a mouse, touch, or focus a reset and hold Space / Enter.</p>
+        </section>
+      </section>
+
+      <section class="phone-panel" aria-labelledby="phone-heading">
+        <div class="phone-heading"><div><p class="eyebrow">IN YOUR HAND</p><h2 id="phone-heading">Phone controls</h2></div><span id="connection-badge" class="connected-badge"><span class="status-dot"></span> Connected</span></div>
+        <div class="phone-score" aria-label="Phone received score">
+          <div class="phone-main-score"><span id="phone-runs">0</span><span class="score-slash">/</span><span id="phone-wickets">0</span><span class="score-caption">RUNS / WICKETS</span></div>
+          <div class="phone-other-score"><div><span id="phone-overs">0</span><small>OVERS</small></div><div><span id="phone-target">0</span><small>TO WIN</small></div></div>
+        </div>
+        <p id="phone-sync-note" class="sync-note">Live from the controller</p>
+        <fieldset id="phone-command-controls">
+          <legend class="sr-only">Phone scoring commands</legend>
+          <div class="phone-field-heading"><h3>Runs</h3><span>0–999</span></div>
+          <div class="run-buttons">
+            <button type="button" class="score-button run-primary" data-phone-field="runs" data-amount="1" aria-label="Phone: add 1 run">+1</button>
+            <button type="button" class="score-button run-primary" data-phone-field="runs" data-amount="4" aria-label="Phone: add 4 runs">+4</button>
+            <button type="button" class="score-button run-primary" data-phone-field="runs" data-amount="6" aria-label="Phone: add 6 runs">+6</button>
+            <button type="button" class="score-button" data-phone-field="runs" data-amount="-1" aria-label="Phone: subtract 1 run">−1</button>
+          </div>
+          <div class="paired-fields">
+            <div><div class="phone-field-heading"><h3>Wickets</h3><span>0–10</span></div><div class="two-buttons"><button type="button" class="score-button" data-phone-field="wickets" data-amount="1" aria-label="Phone: add 1 wicket">+1</button><button type="button" class="score-button" data-phone-field="wickets" data-amount="-1" aria-label="Phone: subtract 1 wicket">−1</button></div></div>
+            <div><div class="phone-field-heading"><h3>Overs</h3><span>0–99</span></div><div class="two-buttons"><button type="button" class="score-button" data-phone-field="overs" data-amount="1" aria-label="Phone: add 1 over">+1</button><button type="button" class="score-button" data-phone-field="overs" data-amount="-1" aria-label="Phone: subtract 1 over">−1</button></div></div>
+          </div>
+          <div class="target-control"><div><h3>Target to win</h3><p>Fixed until you change it.</p></div><button type="button" class="subtle-button" id="edit-target">Set target</button></div>
+          <div class="phone-tools"><button type="button" id="undo" class="subtle-button">↶ Undo</button><button type="button" id="correct" class="subtle-button">Edit score</button></div>
+          <section class="inline-editor" data-dialog hidden role="region" id="edit-dialog" aria-labelledby="edit-title">
+            <form id="edit-form" novalidate>
+              <p class="eyebrow">DIRECT CORRECTION</p><h2 id="edit-title">Edit score</h2><p>Set an exact value. This change can be undone.</p>
+              <label for="edit-field">Score field</label><select id="edit-field" name="field"><option value="runs">Runs</option><option value="wickets">Wickets</option><option value="overs">Overs</option><option value="target">Target to win</option></select>
+              <label id="edit-value-label" for="edit-value">Value (0–999)</label><input id="edit-value" name="value" type="text" inputmode="numeric" autocomplete="off" required>
+              <p id="edit-error" class="form-error" role="alert"></p>
+              <div class="dialog-actions"><button type="button" class="subtle-button" data-close-dialog>Cancel</button><button type="submit" class="primary-button">Save value</button></div>
+            </form>
+          </section>
+          <p id="undo-note" class="undo-note">No actions to undo</p>
+          <button type="button" id="new-innings" class="new-innings-button">New innings <span aria-hidden="true">→</span></button>
+          <section class="inline-editor" data-dialog hidden role="region" id="innings-dialog" aria-labelledby="innings-title">
+            <form id="innings-form" novalidate>
+              <p class="eyebrow">A FRESH START</p><h2 id="innings-title">Start a new innings?</h2><p>Runs, wickets and overs will return to zero. Choose the target explicitly. The whole action can be undone.</p>
+              <fieldset class="target-choices"><legend>Target for this innings</legend>
+                <label><input type="radio" name="target-choice" value="keep"> Keep current target (<span id="innings-current-target">0</span>)</label>
+                <label><input type="radio" name="target-choice" value="zero"> Clear target to 0</label>
+                <label><input type="radio" name="target-choice" value="custom"> Set a new target</label>
+              </fieldset>
+              <label for="innings-target">New target (0–999)</label><input id="innings-target" type="text" inputmode="numeric" autocomplete="off" disabled>
+              <p id="innings-error" class="form-error" role="alert"></p>
+              <div class="dialog-actions"><button type="button" class="subtle-button" data-close-dialog>Cancel</button><button type="submit" class="primary-button">Confirm new innings</button></div>
+            </form>
+          </section>
+        </fieldset>
+        <div class="connection-control"><div><strong>Test the connection</strong><p>The board keeps working offline.</p></div><button type="button" id="toggle-connection" class="subtle-button">Disconnect phone</button></div>
+      </section>
+    </div>
+
+    <div class="feedback-row"><p id="action-status" role="status" aria-live="polite">Ready for the first ball.</p><span id="history-count">0 actions in history</span></div>
+    <p id="storage-warning" role="alert" hidden></p>
+    <footer><p><span class="status-dot"></span> <span id="storage-status">Saved in this browser</span> <span class="footer-divider">/</span> No hardware required</p><button type="button" id="clear-data">Clear saved simulation data</button></footer>
+    <section class="inline-editor" data-dialog hidden role="region" id="clear-dialog" aria-labelledby="clear-title">
+      <form id="clear-form"><p class="eyebrow">SIMULATION DATA</p><h2 id="clear-title">Clear saved data?</h2><p>This clears all four fields and the undo history, and removes this simulator’s saved data from the browser. This cannot be undone.</p><div class="dialog-actions"><button type="button" class="subtle-button" data-close-dialog>Cancel</button><button type="submit" class="danger-button">Clear simulation data</button></div></form>
+    </section>
+  </main>
+
+<!-- Generated by npm run bundle. Edit the separate source files to make changes. -->
+<script>
+(function () {
+'use strict';
+const __modules = Object.create(null);
+
+// Source: js/scoring.js
+__modules["js/scoring.js"] = (() => {
+// Pure scoring rules. No DOM, storage, transport, or hardware dependencies.
+const FIELDS = Object.freeze({
+  runs: Object.freeze({ label: 'Runs', max: 999, digits: 3 }),
+  wickets: Object.freeze({ label: 'Wickets', max: 10, digits: 2 }),
+  overs: Object.freeze({ label: 'Overs', max: 99, digits: 2 }),
+  target: Object.freeze({ label: 'To win', max: 999, digits: 3 }),
+});
+
+const emptyScore = () => ({ runs: 0, wickets: 0, overs: 0, target: 0 });
+
+function validateValue(field, value) {
+  if (!Object.hasOwn(FIELDS, field)) throw new Error('Unknown score field.');
+  if (!Number.isInteger(value) || value < 0 || value > FIELDS[field].max) {
+    throw new Error(`${FIELDS[field].label} must be a whole number from 0 to ${FIELDS[field].max}.`);
+  }
+  return value;
+}
+
+function validateScore(score) {
+  if (!score || typeof score !== 'object') throw new Error('Invalid score.');
+  return Object.fromEntries(Object.keys(FIELDS).map(field => [field, validateValue(field, score[field])]));
+}
+
+// Parse user text deliberately: blank, fractions, signs, exponent notation, etc. are rejected.
+function parseScoreInput(field, text) {
+  if (typeof text !== 'string' || !/^\d+$/.test(text.trim())) {
+    throw new Error('Enter a whole number using digits only.');
+  }
+  return validateValue(field, Number(text.trim()));
+}
+
+function describeAction(action) {
+  if (action.type === 'new-innings') return `New innings · target ${action.target}`;
+  const label = FIELDS[action.field]?.label ?? '';
+  if (action.type === 'adjust') return `${label} ${action.amount > 0 ? '+' : ''}${action.amount}`;
+  if (action.type === 'reset') return `${label} reset`;
+  return `${label} set to ${action.value}`;
+}
+
+class ScoringEngine {
+  #score;
+  #history;
+
+  constructor(saved = null) {
+    this.#score = saved ? validateScore(saved.score) : emptyScore();
+    const history = saved?.history ?? [];
+    if (!Array.isArray(history)) throw new Error('Invalid saved history.');
+    this.#history = history.map(entry => {
+      if (typeof entry.label !== 'string') throw new Error('Invalid history entry.');
+      return { score: validateScore(entry.score), label: entry.label };
+    });
+  }
+
+  snapshot() {
+    return {
+      score: { ...this.#score },
+      canUndo: this.#history.length > 0,
+      undoLabel: this.#history.at(-1)?.label ?? '',
+      historyCount: this.#history.length,
+    };
+  }
+
+  exportData() {
+    return { score: { ...this.#score }, history: this.#history.map(entry => ({ ...entry, score: { ...entry.score } })) };
+  }
+
+  apply(action) {
+    if (!action || typeof action !== 'object') throw new Error('Invalid command.');
+    if (action.type === 'undo') {
+      const previous = this.#history.pop();
+      if (!previous) throw new Error('There is nothing to undo.');
+      this.#score = previous.score;
+      return { changed: true, message: `Undid: ${previous.label}` };
+    }
+
+    const next = { ...this.#score };
+    switch (action.type) {
+      case 'new-innings':
+        // No implicit target. The caller must explicitly choose one, including zero.
+        Object.assign(next, emptyScore(), { target: validateValue('target', action.target) });
+        break;
+      case 'adjust':
+        validateValue(action.field, next[action.field]);
+        if (!Number.isInteger(action.amount) || action.amount === 0) throw new Error('Invalid adjustment.');
+        next[action.field] = validateValue(action.field, next[action.field] + action.amount);
+        break;
+      case 'set':
+        next[action.field] = validateValue(action.field, action.value);
+        break;
+      case 'reset':
+        next[action.field] = validateValue(action.field, 0);
+        break;
+      default:
+        throw new Error('Unknown command.');
+    }
+
+    if (Object.keys(FIELDS).every(field => next[field] === this.#score[field])) {
+      return { changed: false, message: 'Score already has that value.' };
+    }
+    const label = describeAction(action);
+    this.#history.push({ score: { ...this.#score }, label });
+    this.#score = next;
+    return { changed: true, message: label };
+  }
+}
+
+return { FIELDS, emptyScore, validateValue, validateScore, parseScoreInput, describeAction, ScoringEngine };
+})();
+
+// Source: js/storage.js
+__modules["js/storage.js"] = (() => {
+const { ScoringEngine } = __modules["js/scoring.js"];
+
+const STORAGE_KEY = 'cricket-scoreboard-simulator.v1';
+
+// Persist the controller state and undo history together, never a phone snapshot.
+function loadEngine(storage) {
+  try {
+    const raw = storage.getItem(STORAGE_KEY);
+    if (raw === null) return { engine: new ScoringEngine(), warning: '' };
+    const saved = JSON.parse(raw);
+    if (saved.version !== 1) throw new Error('Unsupported save version.');
+    return { engine: new ScoringEngine(saved.data), warning: '' };
+  } catch {
+    return {
+      engine: new ScoringEngine(),
+      warning: 'Saved data could not be read. Starting at zero; clear saved data to remove an invalid save. Scores still work in memory.',
+    };
+  }
+}
+
+function saveEngine(storage, engine) {
+  storage.setItem(STORAGE_KEY, JSON.stringify({ version: 1, data: engine.exportData() }));
+}
+
+return { STORAGE_KEY, loadEngine, saveEngine };
+})();
+
+// Source: js/controller.js
+__modules["js/controller.js"] = (() => {
+const { ScoringEngine } = __modules["js/scoring.js"];
+
+const { saveEngine, STORAGE_KEY } = __modules["js/storage.js"];
+
+// Represents U1, the ESP32: every input is serialised through this one controller.
+class ScoreboardController {
+  #engine;
+  #storage;
+  #listeners = new Set();
+  storageWarning = '';
+
+  constructor(engine = new ScoringEngine(), storage = null) {
+    this.#engine = engine;
+    this.#storage = storage;
+  }
+
+  getSnapshot() { return this.#engine.snapshot(); }
+
+  subscribe(listener) {
+    this.#listeners.add(listener);
+    listener(this.getSnapshot());
+    return () => this.#listeners.delete(listener);
+  }
+
+  #broadcast() {
+    for (const listener of this.#listeners) listener(this.getSnapshot());
+  }
+
+  dispatch(action) {
+    try {
+      const result = this.#engine.apply(action);
+      if (result.changed) {
+        this.storageWarning = '';
+        if (this.#storage) {
+          try { saveEngine(this.#storage, this.#engine); }
+          catch { this.storageWarning = 'Local saving is unavailable. This score is held in memory only.'; }
+        }
+        this.#broadcast();
+      }
+      return { ok: true, ...result, snapshot: this.getSnapshot() };
+    } catch (error) {
+      return { ok: false, changed: false, message: error.message };
+    }
+  }
+
+  // An explicit simulation maintenance action, deliberately outside score undo.
+  clearSavedData() {
+    try {
+      this.#storage?.removeItem(STORAGE_KEY);
+    } catch {
+      return { ok: false, message: 'Saved data could not be cleared. Check browser storage permissions.' };
+    }
+    this.#engine = new ScoringEngine();
+    this.storageWarning = '';
+    this.#broadcast();
+    return { ok: true, message: 'Saved simulation data cleared. All fields and undo history are now zero.' };
+  }
+}
+
+return { ScoreboardController };
+})();
+
+// Source: js/phone-connection.js
+__modules["js/phone-connection.js"] = (() => {
+// This is the transport boundary for a future ESP32 HTTP/WebSocket adapter.
+// Public interface: send(command), subscribe(callback), setConnected(boolean), connected.
+// Snapshot payload: { score, canUndo, undoLabel, historyCount }. No DOM dependencies.
+class SimulatedPhoneConnection {
+  #controller;
+  #snapshot;
+  #connected = true;
+  #listeners = new Set();
+
+  constructor(controller) {
+    this.#controller = controller;
+    controller.subscribe(snapshot => {
+      if (!this.#connected) return;
+      this.#snapshot = snapshot;
+      this.#notify();
+    });
+  }
+
+  get connected() { return this.#connected; }
+
+  #notify() {
+    for (const listener of this.#listeners) {
+      // Each receiver gets its own copy; no caller can change the controller state.
+      listener({ connected: this.#connected, snapshot: structuredClone(this.#snapshot) });
+    }
+  }
+
+  subscribe(listener) {
+    this.#listeners.add(listener);
+    listener({ connected: this.#connected, snapshot: structuredClone(this.#snapshot) });
+    return () => this.#listeners.delete(listener);
+  }
+
+  async send(command) {
+    if (!this.#connected) return { ok: false, message: 'Phone is disconnected. Reconnect before sending a command.' };
+    return this.#controller.dispatch(command);
+  }
+
+  setConnected(connected) {
+    this.#connected = Boolean(connected);
+    // Offline commands are rejected, never queued or replayed on reconnection.
+    if (this.#connected) this.#snapshot = this.#controller.getSnapshot();
+    this.#notify();
+  }
+}
+
+return { SimulatedPhoneConnection };
+})();
+
+// Source: js/render.js
+__modules["js/render.js"] = (() => {
+const { FIELDS } = __modules["js/scoring.js"];
+
+// Segment names follow schematic sheet 2: a through g, with no decimal point.
+const SEGMENTS = {
+  a: '10,3 42,3 48,9 42,15 10,15 4,9',
+  b: '44,17 50,11 50,45 44,51 38,45 38,23',
+  c: '44,55 50,61 50,95 44,101 38,95 38,67',
+  d: '10,97 42,97 48,103 42,109 10,109 4,103',
+  e: '8,55 14,61 14,95 8,101 2,95 2,67',
+  f: '8,11 14,17 14,45 8,51 2,45 2,17',
+  g: '10,50 42,50 48,56 42,62 10,62 4,56',
+};
+const DIGIT_SEGMENTS = ['abcdef', 'bc', 'abdeg', 'abcdg', 'bcfg', 'acdfg', 'acdefg', 'abc', 'abcdefg', 'abcdfg'];
+const SVG_NS = 'http://www.w3.org/2000/svg';
+
+function createDigit() {
+  const svg = document.createElementNS(SVG_NS, 'svg');
+  svg.setAttribute('viewBox', '0 0 52 112');
+  svg.setAttribute('class', 'seven-segment');
+  svg.setAttribute('aria-hidden', 'true');
+  for (const [name, points] of Object.entries(SEGMENTS)) {
+    const segment = document.createElementNS(SVG_NS, 'polygon');
+    segment.setAttribute('points', points);
+    segment.setAttribute('class', 'segment');
+    segment.dataset.segment = name;
+    svg.append(segment);
+  }
+  return svg;
+}
+
+function initialiseDigits() {
+  for (const display of document.querySelectorAll('[data-display]')) {
+    const field = FIELDS[display.dataset.display];
+    for (let index = 0; index < field.digits; index++) display.append(createDigit());
+  }
+}
+
+function renderBoard({ score, historyCount }) {
+  for (const display of document.querySelectorAll('[data-display]')) {
+    const field = display.dataset.display;
+    const digits = String(score[field]).padStart(FIELDS[field].digits, '0');
+    display.setAttribute('aria-label', `${FIELDS[field].label} ${score[field]}`);
+    [...display.children].forEach((svg, index) => {
+      const lit = DIGIT_SEGMENTS[Number(digits[index])];
+      for (const segment of svg.children) segment.classList.toggle('lit', lit.includes(segment.dataset.segment));
+    });
+  }
+  document.getElementById('history-count').textContent = `${historyCount} ${historyCount === 1 ? 'action' : 'actions'} in history`;
+}
+
+function renderPhone({ connected, snapshot }) {
+  for (const field of Object.keys(FIELDS)) document.getElementById(`phone-${field}`).textContent = snapshot.score[field];
+  document.getElementById('phone-command-controls').disabled = !connected;
+  document.getElementById('undo').disabled = !snapshot.canUndo;
+  document.getElementById('undo-note').textContent = snapshot.canUndo ? `Last action: ${snapshot.undoLabel}` : 'No actions to undo';
+  const badge = document.getElementById('connection-badge');
+  badge.classList.toggle('offline', !connected);
+  badge.replaceChildren();
+  const dot = document.createElement('span');
+  dot.className = 'status-dot';
+  badge.append(dot, connected ? ' Connected' : ' Disconnected');
+  document.getElementById('phone-sync-note').textContent = connected ? 'Live from the controller' : 'Offline · showing last received score';
+  document.getElementById('toggle-connection').textContent = connected ? 'Disconnect phone' : 'Reconnect phone';
+}
+
+function renderMessage(message, isError = false) {
+  const status = document.getElementById('action-status');
+  status.textContent = message;
+  status.classList.toggle('error', isError);
+}
+
+function renderStorageWarning(message) {
+  const warning = document.getElementById('storage-warning');
+  warning.hidden = !message;
+  warning.textContent = message;
+  document.getElementById('storage-status').textContent = message ? 'Local save unavailable' : 'Saved in this browser';
+}
+
+return { initialiseDigits, renderBoard, renderPhone, renderMessage, renderStorageWarning };
+})();
+
+// Source: js/hold-reset.js
+__modules["js/hold-reset.js"] = (() => {
+// A continuous hold, measured with a monotonic clock. Inject time in focused tests.
+class HoldReset {
+  #started = null;
+  #timer = null;
+
+  constructor({ complete, progress = () => {}, duration = 2000,
+    now = () => performance.now(), schedule = callback => setTimeout(callback, 16),
+    unschedule = id => clearTimeout(id) }) {
+    Object.assign(this, { complete, progress, duration, now, schedule, unschedule });
+  }
+
+  get active() { return this.#started !== null; }
+
+  start() {
+    if (this.active) return; // Keyboard auto-repeat cannot restart or shorten the hold.
+    this.#started = this.now();
+    this.progress(0);
+    this.#tick();
+  }
+
+  #tick = () => {
+    this.#timer = null;
+    if (!this.active) return;
+    const elapsed = this.now() - this.#started;
+    this.progress(Math.min(1, elapsed / this.duration));
+    if (elapsed >= this.duration) {
+      this.#started = null;
+      this.complete();
+    } else {
+      this.#timer = this.schedule(this.#tick);
+    }
+  };
+
+  release() {
+    // Account for a delayed animation callback without granting early releases a reset.
+    const completed = this.active && this.now() - this.#started >= this.duration;
+    this.cancel();
+    if (completed) this.complete();
+    return completed;
+  }
+
+  cancel() {
+    if (this.#timer !== null) this.unschedule(this.#timer);
+    this.#timer = null;
+    this.#started = null;
+    this.progress(0);
+  }
+}
+
+return { HoldReset };
+})();
+
+// Source: js/physical-controls.js
+__modules["js/physical-controls.js"] = (() => {
+const { FIELDS } = __modules["js/scoring.js"];
+
+const { HoldReset } = __modules["js/hold-reset.js"];
+
+// SW2–SW13 in schematic CSB-001 revision B, sheet 3. Labels only; no GPIO I/O.
+const BUTTON_PINS = { runs: [13, 14, 16], wickets: [17, 18, 19], overs: [21, 22, 32], target: [33, 34, 35] };
+
+function bindPhysicalControls(controller, report) {
+  const panel = document.getElementById('physical-controls');
+  const cancelCallbacks = [];
+  let switchNumber = 2;
+
+  for (const [field, info] of Object.entries(FIELDS)) {
+    const row = document.createElement('div');
+    row.className = 'physical-row';
+    const label = document.createElement('div');
+    label.className = 'physical-label';
+    label.textContent = field === 'target' ? 'Target' : info.label;
+    const pinLabel = document.createElement('small');
+    pinLabel.textContent = `SW${switchNumber}–${switchNumber + 2} · GPIO ${BUTTON_PINS[field].join(' / ')}`;
+    label.append(pinLabel);
+    row.append(label);
+
+    for (const amount of [1, -1]) {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'physical-step';
+      button.textContent = amount > 0 ? '+' : '−';
+      button.setAttribute('aria-label', `Physical: ${amount > 0 ? 'add' : 'subtract'} 1 ${field === 'target' ? 'target' : field === 'runs' ? 'run' : field === 'wickets' ? 'wicket' : 'over'}`);
+      button.addEventListener('click', () => report(controller.dispatch({ type: 'adjust', field, amount }), 'Physical'));
+      button.addEventListener('keydown', event => { if (event.repeat) event.preventDefault(); });
+      row.append(button);
+    }
+
+    const reset = document.createElement('button');
+    reset.type = 'button';
+    reset.className = 'hold-button';
+    reset.setAttribute('aria-label', `Physical: hold 2 seconds to reset ${field}`);
+    reset.innerHTML = '<span class="hold-progress" aria-hidden="true"></span><span class="hold-label">Hold to reset · 2s</span>';
+    const text = reset.querySelector('.hold-label');
+    let pointerId = null;
+    let heldKey = null;
+
+    const hold = new HoldReset({
+      complete: () => {
+        reset.classList.remove('holding');
+        reset.style.setProperty('--hold-progress', '0');
+        text.textContent = 'Hold to reset · 2s';
+        report(controller.dispatch({ type: 'reset', field }), 'Physical');
+      },
+      progress: value => {
+        reset.style.setProperty('--hold-progress', String(value));
+        reset.classList.toggle('holding', hold.active);
+        text.textContent = hold.active ? `Holding… ${Math.floor(value * 100)}%` : 'Hold to reset · 2s';
+      },
+    });
+
+    function cancel() {
+      const wasActive = hold.active;
+      hold.cancel();
+      const capturedPointer = pointerId;
+      pointerId = null;
+      heldKey = null;
+      if (capturedPointer !== null && reset.hasPointerCapture(capturedPointer)) reset.releasePointerCapture(capturedPointer);
+      if (wasActive) report({ ok: true, message: `${info.label} reset cancelled — hold for a full 2 seconds.` }, 'Physical');
+    }
+
+    function release() {
+      const wasActive = hold.active;
+      const completed = hold.release();
+      if (wasActive && !completed) report({ ok: true, message: `${info.label} reset cancelled — hold for a full 2 seconds.` }, 'Physical');
+    }
+
+    reset.addEventListener('pointerdown', event => {
+      if (event.button !== 0 || pointerId !== null || heldKey !== null) return;
+      event.preventDefault();
+      reset.focus();
+      pointerId = event.pointerId;
+      reset.setPointerCapture(pointerId);
+      hold.start();
+    });
+    reset.addEventListener('pointermove', event => {
+      if (event.pointerId !== pointerId) return;
+      const box = reset.getBoundingClientRect();
+      if (event.clientX < box.left || event.clientX > box.right || event.clientY < box.top || event.clientY > box.bottom) cancel();
+    });
+    reset.addEventListener('pointerup', event => {
+      if (event.pointerId !== pointerId) return;
+      release();
+      pointerId = null;
+      if (reset.hasPointerCapture(event.pointerId)) reset.releasePointerCapture(event.pointerId);
+    });
+    reset.addEventListener('pointercancel', cancel);
+    reset.addEventListener('lostpointercapture', () => { if (pointerId !== null) cancel(); });
+    reset.addEventListener('contextmenu', event => event.preventDefault());
+    reset.addEventListener('click', event => event.preventDefault()); // A tap or synthetic click cannot reset.
+
+    reset.addEventListener('keydown', event => {
+      if (event.key !== ' ' && event.key !== 'Enter') return;
+      event.preventDefault();
+      if (event.repeat || heldKey !== null || pointerId !== null) return;
+      heldKey = event.key;
+      hold.start();
+    });
+    reset.addEventListener('keyup', event => {
+      if (event.key !== heldKey) return;
+      event.preventDefault();
+      heldKey = null;
+      release();
+    });
+    reset.addEventListener('blur', cancel);
+    cancelCallbacks.push(cancel);
+    row.append(reset);
+    panel.append(row);
+    switchNumber += 3;
+  }
+
+  const cancelAll = () => cancelCallbacks.forEach(cancel => cancel());
+  window.addEventListener('blur', cancelAll);
+  document.addEventListener('visibilitychange', () => { if (document.hidden) cancelAll(); });
+  return cancelAll;
+}
+
+return { bindPhysicalControls };
+})();
+
+// Source: js/panels.js
+__modules["js/panels.js"] = (() => {
+// In-page edit/confirmation forms work in embedded viewers without popup APIs.
+let activePanel = null;
+let returnFocus = null;
+
+function openPanel(panel) {
+  if (activePanel === panel) return;
+  if (activePanel) closePanel(activePanel);
+  returnFocus = document.activeElement;
+  activePanel = panel;
+  panel.hidden = false;
+  panel.setAttribute('open', '');
+  panel.scrollIntoView({ block: 'nearest' });
+  const input = panel.querySelector('input:not(:disabled), select:not(:disabled)');
+  (input ?? panel.querySelector('form')).focus();
+}
+
+function closePanel(panel) {
+  panel.hidden = true;
+  panel.removeAttribute('open');
+  if (activePanel !== panel) return;
+  activePanel = null;
+  // A disconnect can disable the opener while the panel is open.
+  if (returnFocus?.isConnected && !returnFocus.matches(':disabled')) returnFocus.focus();
+  returnFocus = null;
+}
+
+function bindPanels() {
+  for (const panel of document.querySelectorAll('[data-dialog]')) {
+    panel.querySelector('form').tabIndex = -1;
+    for (const button of panel.querySelectorAll('[data-close-dialog]')) {
+      button.addEventListener('click', () => closePanel(panel));
+    }
+  }
+
+  document.addEventListener('keydown', event => {
+    if (activePanel && event.key === 'Escape') {
+      event.preventDefault();
+      closePanel(activePanel);
+    }
+  });
+}
+
+return { openPanel, closePanel, bindPanels };
+})();
+
+// Source: js/phone-controls.js
+__modules["js/phone-controls.js"] = (() => {
+const { FIELDS, parseScoreInput } = __modules["js/scoring.js"];
+
+const { openPanel, closePanel } = __modules["js/panels.js"];
+
+function bindPhoneControls(connection, report, cancelHolds) {
+  const byId = id => document.getElementById(id);
+  let received;
+  connection.subscribe(message => {
+    received = message.snapshot;
+    if (!message.connected) {
+      closePanel(byId('edit-dialog'));
+      closePanel(byId('innings-dialog'));
+    }
+  });
+
+  const send = async command => {
+    const result = await connection.send(command);
+    report(result, 'Phone');
+    return result;
+  };
+
+  for (const button of document.querySelectorAll('[data-phone-field]')) {
+    button.addEventListener('click', () => send({ type: 'adjust', field: button.dataset.phoneField, amount: Number(button.dataset.amount) }));
+  }
+  byId('undo').addEventListener('click', () => send({ type: 'undo' }));
+  byId('toggle-connection').addEventListener('click', () => {
+    connection.setConnected(!connection.connected);
+    report({ ok: true, message: connection.connected ? 'Reconnected. Phone received the current controller score.' : 'Phone disconnected. Physical controls remain live.' });
+  });
+
+  const editDialog = byId('edit-dialog');
+  const editField = byId('edit-field');
+  const editValue = byId('edit-value');
+  const editError = byId('edit-error');
+
+  function populateEdit() {
+    const field = editField.value;
+    editValue.value = received.score[field];
+    byId('edit-value-label').textContent = `${FIELDS[field].label} (0–${FIELDS[field].max})`;
+    editError.textContent = '';
+  }
+
+  function openEdit(targetOnly) {
+    if (!connection.connected) return;
+    cancelHolds();
+    editField.value = targetOnly ? 'target' : 'runs';
+    editField.disabled = targetOnly;
+    byId('edit-title').textContent = targetOnly ? 'Set target to win' : 'Edit score';
+    populateEdit();
+    openPanel(editDialog);
+    editValue.focus();
+    editValue.select();
+  }
+  byId('edit-target').addEventListener('click', () => openEdit(true));
+  byId('correct').addEventListener('click', () => openEdit(false));
+  editField.addEventListener('change', populateEdit);
+  byId('edit-form').addEventListener('submit', async event => {
+    event.preventDefault();
+    try {
+      const value = parseScoreInput(editField.value, editValue.value);
+      const result = await send({ type: 'set', field: editField.value, value });
+      if (result.ok) closePanel(editDialog);
+      else editError.textContent = result.message;
+    } catch (error) { editError.textContent = error.message; }
+  });
+
+  const inningsDialog = byId('innings-dialog');
+  const inningsForm = byId('innings-form');
+  const inningsTarget = byId('innings-target');
+  byId('new-innings').addEventListener('click', () => {
+    if (!connection.connected) return;
+    cancelHolds();
+    inningsForm.reset();
+    inningsTarget.disabled = true;
+    byId('innings-current-target').textContent = received.score.target;
+    byId('innings-error').textContent = '';
+    openPanel(inningsDialog);
+  });
+  inningsForm.addEventListener('change', () => {
+    inningsTarget.disabled = inningsForm.elements['target-choice'].value !== 'custom';
+    if (!inningsTarget.disabled) inningsTarget.focus();
+  });
+  inningsForm.addEventListener('submit', async event => {
+    event.preventDefault();
+    try {
+      const choice = inningsForm.elements['target-choice'].value;
+      if (!choice) throw new Error('Choose a target before confirming the new innings.');
+      // "Keep" means keep the current received controller target, even if a physical edit just changed it.
+      const target = choice === 'keep' ? received.score.target : choice === 'zero' ? 0 : parseScoreInput('target', inningsTarget.value);
+      const result = await send({ type: 'new-innings', target });
+      if (result.ok) closePanel(inningsDialog);
+      else byId('innings-error').textContent = result.message;
+    } catch (error) { byId('innings-error').textContent = error.message; }
+  });
+  // Keep the displayed choice in sync if hardware changes target while the dialog is open.
+  connection.subscribe(({ snapshot }) => { byId('innings-current-target').textContent = snapshot.score.target; });
+
+}
+
+return { bindPhoneControls };
+})();
+
+// Source: js/app.js
+__modules["js/app.js"] = (() => {
+const { loadEngine } = __modules["js/storage.js"];
+
+const { ScoreboardController } = __modules["js/controller.js"];
+
+const { SimulatedPhoneConnection } = __modules["js/phone-connection.js"];
+
+const { initialiseDigits, renderBoard, renderPhone, renderMessage, renderStorageWarning } = __modules["js/render.js"];
+
+const { bindPhysicalControls } = __modules["js/physical-controls.js"];
+
+const { bindPhoneControls } = __modules["js/phone-controls.js"];
+
+const { bindPanels, openPanel, closePanel } = __modules["js/panels.js"];
+
+// Access through methods so privacy-mode / denied localStorage access can be caught.
+const storage = {
+  getItem: key => window.localStorage.getItem(key),
+  setItem: (key, value) => window.localStorage.setItem(key, value),
+  removeItem: key => window.localStorage.removeItem(key),
+};
+const loaded = loadEngine(storage);
+const controller = new ScoreboardController(loaded.engine, storage);
+controller.storageWarning = loaded.warning;
+const phone = new SimulatedPhoneConnection(controller);
+
+initialiseDigits();
+controller.subscribe(snapshot => {
+  renderBoard(snapshot);
+  renderStorageWarning(controller.storageWarning);
+});
+phone.subscribe(renderPhone);
+
+function report(result, source = '') {
+  renderMessage(`${source ? `${source} · ` : ''}${result.message}`, !result.ok);
+  renderStorageWarning(controller.storageWarning);
+}
+
+const cancelHolds = bindPhysicalControls(controller, report);
+bindPanels();
+bindPhoneControls(phone, report, cancelHolds);
+
+const clearDialog = document.getElementById('clear-dialog');
+document.getElementById('clear-data').addEventListener('click', () => {
+  cancelHolds();
+  openPanel(clearDialog);
+});
+document.getElementById('clear-form').addEventListener('submit', event => {
+  event.preventDefault();
+  cancelHolds();
+  const result = controller.clearSavedData();
+  report(result);
+  if (result.ok) closePanel(clearDialog);
+});
+
+return {  };
+})();
+})();
+</script>
+</body>
+</html>
