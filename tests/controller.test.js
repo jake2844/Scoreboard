@@ -110,3 +110,16 @@ test('corrupt storage and denied saving do not prevent in-memory scoring', () =>
   assert.equal(controller.clearSavedData().ok, false);
   assert.equal(controller.getSnapshot().score.runs, 4);
 });
+
+test('save restoration preserves the full target hold as one undo action', () => {
+  const storage = memoryStorage();
+  const controller = new ScoreboardController(new ScoringEngine(), storage);
+  for (let step = 0; step < 200; step++) {
+    controller.dispatch({ type: 'adjust', field: 'target', amount: 1, groupId: 'hold' });
+  }
+  const restored = new ScoreboardController(loadEngine(storage).engine, storage);
+  assert.equal(restored.getSnapshot().score.target, 200);
+  assert.equal(restored.getSnapshot().historyCount, 1);
+  restored.dispatch({ type: 'undo' });
+  assert.equal(restored.getSnapshot().score.target, 0);
+});

@@ -97,3 +97,83 @@ test('snapshots and exports cannot mutate state or history', () => {
   engine.apply({ type: 'undo' });
   assert.equal(engine.snapshot().score.runs, 0);
 });
+
+test('new innings can use authoritative current runs + 1 and undo the whole action', () => {
+  const engine = new ScoringEngine({ score: { runs: 198, wickets: 8, overs: 40, target: 300 }, history: [] });
+  const command = { type: 'new-innings', targetChoice: 'runs-plus-one' };
+  engine.apply({ type: 'adjust', field: 'runs', amount: 1 });
+  const before = engine.snapshot().score;
+  engine.apply(command);
+  assert.deepEqual(engine.snapshot().score, { runs: 0, wickets: 0, overs: 0, target: 200 });
+  assert.equal(engine.snapshot().undoLabel, 'New innings · target 200');
+  engine.apply({ type: 'undo' });
+  assert.deepEqual(engine.snapshot().score, before);
+});
+
+test('runs + 1 handles zero and 998; rejects 999 without clearing the innings', () => {
+  for (const runs of [0, 998, 999]) {
+    const initial = { runs, wickets: 2, overs: 10, target: 50 };
+    const engine = new ScoringEngine({ score: initial, history: [] });
+    if (runs === 999) {
+      assert.throws(() => engine.apply({ type: 'new-innings', targetChoice: 'runs-plus-one' }));
+      assert.deepEqual(engine.snapshot().score, initial);
+      assert.equal(engine.snapshot().canUndo, false);
+    } else {
+      engine.apply({ type: 'new-innings', targetChoice: 'runs-plus-one' });
+      assert.deepEqual(engine.snapshot().score, { ...emptyScore(), target: runs + 1 });
+    }
+  }
+});
+
+test('new innings rejects ambiguous and unknown target choices', () => {
+  const engine = new ScoringEngine();
+  assert.throws(() => engine.apply({ type: 'new-innings', targetChoice: 'runs-plus-one', target: 20 }));
+  assert.throws(() => engine.apply({ type: 'new-innings', targetChoice: 'unknown' }));
+  assert.deepEqual(engine.snapshot().score, emptyScore());
+});
+
+test('a target hold changes by one per step and undoes the entire hold', () => {
+  const engine = new ScoringEngine();
+  for (let step = 0; step < 200; step++) {
+    engine.apply({ type: 'adjust', field: 'target', amount: 1, groupId: 'hold-1' });
+    assert.equal(engine.snapshot().score.target, step + 1);
+  }
+  assert.equal(engine.snapshot().historyCount, 1);
+  assert.equal(engine.snapshot().undoLabel, 'To win hold +200');
+  engine.apply({ type: 'undo' });
+  assert.equal(engine.snapshot().score.target, 0);
+  assert.equal(engine.snapshot().historyCount, 0);
+});
+
+test('separate holds and an intervening phone command stay separate in undo history', () => {
+  const engine = new ScoringEngine();
+  const step = groupId => engine.apply({ type: 'adjust', field: 'target', amount: 1, groupId });
+  step('hold-1'); step('hold-1');
+  engine.apply({ type: 'adjust', field: 'runs', amount: 6 });
+  step('hold-1'); step('hold-1');
+  step('hold-2'); step('hold-2');
+  assert.deepEqual(engine.snapshot().score, { runs: 6, wickets: 0, overs: 0, target: 6 });
+  engine.apply({ type: 'undo' });
+  assert.equal(engine.snapshot().score.target, 4);
+  engine.apply({ type: 'undo' });
+  assert.deepEqual(engine.snapshot().score, { runs: 6, wickets: 0, overs: 0, target: 2 });
+  engine.apply({ type: 'undo' });
+  assert.deepEqual(engine.snapshot().score, { runs: 0, wickets: 0, overs: 0, target: 2 });
+  engine.apply({ type: 'undo' });
+  assert.equal(engine.snapshot().score.target, 0);
+});
+
+test('held target decrement stops at zero and does not merge with another field or direction', () => {
+  const engine = new ScoringEngine({ score: { ...emptyScore(), target: 2 }, history: [] });
+  for (let step = 0; step < 2; step++) engine.apply({ type: 'adjust', field: 'target', amount: -1, groupId: 'hold' });
+  assert.throws(() => engine.apply({ type: 'adjust', field: 'target', amount: -1, groupId: 'hold' }));
+  assert.equal(engine.snapshot().score.target, 0);
+  assert.equal(engine.snapshot().historyCount, 1);
+  engine.apply({ type: 'adjust', field: 'target', amount: 1, groupId: 'hold' });
+  engine.apply({ type: 'adjust', field: 'runs', amount: 1, groupId: 'hold' });
+  assert.equal(engine.snapshot().historyCount, 3);
+  engine.apply({ type: 'undo' });
+  engine.apply({ type: 'undo' });
+  engine.apply({ type: 'undo' });
+  assert.equal(engine.snapshot().score.target, 2);
+});

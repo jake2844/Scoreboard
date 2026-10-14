@@ -40,6 +40,7 @@ export function describeAction(action) {
 export class ScoringEngine {
   #score;
   #history;
+  #lastGroup = null;
 
   constructor(saved = null) {
     this.#score = saved ? validateScore(saved.score) : emptyScore();
@@ -70,6 +71,7 @@ export class ScoringEngine {
       const previous = this.#history.pop();
       if (!previous) throw new Error('There is nothing to undo.');
       this.#score = previous.score;
+      this.#lastGroup = null;
       return { changed: true, message: `Undid: ${previous.label}` };
     }
 
@@ -77,11 +79,20 @@ export class ScoringEngine {
     switch (action.type) {
       case 'new-innings':
         // No implicit target. The caller must explicitly choose one, including zero.
-        Object.assign(next, emptyScore(), { target: validateValue('target', action.target) });
+        if (action.targetChoice !== undefined &&
+          (action.targetChoice !== 'runs-plus-one' || action.target !== undefined)) {
+          throw new Error('Choose either current runs + 1 or an explicit target.');
+        }
+        Object.assign(next, emptyScore(), {
+          target: validateValue('target', action.targetChoice === 'runs-plus-one' ? this.#score.runs + 1 : action.target),
+        });
         break;
       case 'adjust':
         validateValue(action.field, next[action.field]);
         if (!Number.isInteger(action.amount) || action.amount === 0) throw new Error('Invalid adjustment.');
+        if (action.groupId !== undefined && (typeof action.groupId !== 'string' || !action.groupId)) {
+          throw new Error('Invalid adjustment group.');
+        }
         next[action.field] = validateValue(action.field, next[action.field] + action.amount);
         break;
       case 'set':
@@ -97,8 +108,21 @@ export class ScoringEngine {
     if (Object.keys(FIELDS).every(field => next[field] === this.#score[field])) {
       return { changed: false, message: 'Score already has that value.' };
     }
-    const label = describeAction(action);
-    this.#history.push({ score: { ...this.#score }, label });
+    let label = action.type === 'new-innings' ? `New innings · target ${next.target}` : describeAction(action);
+    // Consecutive repeat steps from one physical hold form one undoable action.
+    // Any intervening successful command ends the group, preserving other actions.
+    const grouped = action.type === 'adjust' && action.groupId !== undefined;
+    const continueGroup = grouped && this.#lastGroup?.id === action.groupId &&
+      this.#lastGroup.field === action.field && this.#lastGroup.amount === action.amount;
+    if (continueGroup) {
+      this.#lastGroup.total += action.amount;
+      const total = this.#lastGroup.total;
+      label = `${FIELDS[action.field].label} hold ${total > 0 ? '+' : ''}${total}`;
+      this.#history.at(-1).label = label;
+    } else {
+      this.#history.push({ score: { ...this.#score }, label });
+      this.#lastGroup = grouped ? { id: action.groupId, field: action.field, amount: action.amount, total: action.amount } : null;
+    }
     this.#score = next;
     return { changed: true, message: label };
   }

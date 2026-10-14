@@ -458,6 +458,18 @@ footer button {
   background: #f3f5ef;
 }
 
+.repeat-button {
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.repeat-button.holding {
+  background: #ceddcc;
+  border-color: #61835b;
+}
+
 .hold-button {
   position: relative;
   overflow: hidden;
@@ -1091,6 +1103,7 @@ fieldset {
           <p class="panel-description">Press + or − once. Hold a reset for 2 seconds.</p>
           <div id="physical-controls"></div>
           <p class="physical-help">Release early to cancel. Use a mouse, touch, or focus a reset and hold Space / Enter.</p>
+          <p class="physical-help" id="target-hold-help">Target +/−: tap for one, or hold to repeat faster. Release to stop.</p>
         </section>
       </section>
 
@@ -1131,6 +1144,7 @@ fieldset {
             <form id="innings-form" novalidate>
               <p class="eyebrow">A FRESH START</p><h2 id="innings-title">Start a new innings?</h2><p>Runs, wickets and overs will return to zero. Choose the target explicitly. The whole action can be undone.</p>
               <fieldset class="target-choices"><legend>Target for this innings</legend>
+                <label><input type="radio" name="target-choice" value="runs-plus-one"> Use current runs + 1 (<span id="innings-chase-target">1</span>)</label>
                 <label><input type="radio" name="target-choice" value="keep"> Keep current target (<span id="innings-current-target">0</span>)</label>
                 <label><input type="radio" name="target-choice" value="zero"> Clear target to 0</label>
                 <label><input type="radio" name="target-choice" value="custom"> Set a new target</label>
@@ -1203,6 +1217,7 @@ function describeAction(action) {
 class ScoringEngine {
   #score;
   #history;
+  #lastGroup = null;
 
   constructor(saved = null) {
     this.#score = saved ? validateScore(saved.score) : emptyScore();
@@ -1233,6 +1248,7 @@ class ScoringEngine {
       const previous = this.#history.pop();
       if (!previous) throw new Error('There is nothing to undo.');
       this.#score = previous.score;
+      this.#lastGroup = null;
       return { changed: true, message: `Undid: ${previous.label}` };
     }
 
@@ -1240,11 +1256,20 @@ class ScoringEngine {
     switch (action.type) {
       case 'new-innings':
         // No implicit target. The caller must explicitly choose one, including zero.
-        Object.assign(next, emptyScore(), { target: validateValue('target', action.target) });
+        if (action.targetChoice !== undefined &&
+          (action.targetChoice !== 'runs-plus-one' || action.target !== undefined)) {
+          throw new Error('Choose either current runs + 1 or an explicit target.');
+        }
+        Object.assign(next, emptyScore(), {
+          target: validateValue('target', action.targetChoice === 'runs-plus-one' ? this.#score.runs + 1 : action.target),
+        });
         break;
       case 'adjust':
         validateValue(action.field, next[action.field]);
         if (!Number.isInteger(action.amount) || action.amount === 0) throw new Error('Invalid adjustment.');
+        if (action.groupId !== undefined && (typeof action.groupId !== 'string' || !action.groupId)) {
+          throw new Error('Invalid adjustment group.');
+        }
         next[action.field] = validateValue(action.field, next[action.field] + action.amount);
         break;
       case 'set':
@@ -1260,8 +1285,21 @@ class ScoringEngine {
     if (Object.keys(FIELDS).every(field => next[field] === this.#score[field])) {
       return { changed: false, message: 'Score already has that value.' };
     }
-    const label = describeAction(action);
-    this.#history.push({ score: { ...this.#score }, label });
+    let label = action.type === 'new-innings' ? `New innings · target ${next.target}` : describeAction(action);
+    // Consecutive repeat steps from one physical hold form one undoable action.
+    // Any intervening successful command ends the group, preserving other actions.
+    const grouped = action.type === 'adjust' && action.groupId !== undefined;
+    const continueGroup = grouped && this.#lastGroup?.id === action.groupId &&
+      this.#lastGroup.field === action.field && this.#lastGroup.amount === action.amount;
+    if (continueGroup) {
+      this.#lastGroup.total += action.amount;
+      const total = this.#lastGroup.total;
+      label = `${FIELDS[action.field].label} hold ${total > 0 ? '+' : ''}${total}`;
+      this.#history.at(-1).label = label;
+    } else {
+      this.#history.push({ score: { ...this.#score }, label });
+      this.#lastGroup = grouped ? { id: action.groupId, field: action.field, amount: action.amount, total: action.amount } : null;
+    }
     this.#score = next;
     return { changed: true, message: label };
   }
@@ -1551,11 +1589,131 @@ class HoldReset {
 return { HoldReset };
 })();
 
+// Source: js/hold-repeat.js
+__modules["js/hold-repeat.js"] = (() => {
+// One step immediately, then repeat while pressed. No burst of catch-up steps.
+// Every step still changes the target by exactly one through the scoring engine.
+class HoldRepeat {
+  #started = null;
+  #timer = null;
+
+  constructor({ step, now = () => performance.now(),
+    schedule = (callback, delay) => setTimeout(callback, delay), unschedule = id => clearTimeout(id) }) {
+    Object.assign(this, { step, now, schedule, unschedule });
+  }
+
+  get active() { return this.#started !== null; }
+
+  start() {
+    if (this.active) return;
+    this.#started = this.now();
+    if (this.step() === false) { this.stop(); return; }
+    this.#timer = this.schedule(this.#tick, 400);
+  }
+
+  #tick = () => {
+    this.#timer = null;
+    if (!this.active) return;
+    if (this.step() === false) { this.stop(); return; }
+    const elapsed = this.now() - this.#started;
+    const interval = elapsed >= 4000 ? 20 : elapsed >= 2000 ? 50 : 120;
+    this.#timer = this.schedule(this.#tick, interval);
+  };
+
+  stop() {
+    if (this.#timer !== null) this.unschedule(this.#timer);
+    this.#timer = null;
+    this.#started = null;
+  }
+}
+
+return { HoldRepeat };
+})();
+
+// Source: js/repeat-button.js
+__modules["js/repeat-button.js"] = (() => {
+const { HoldRepeat } = __modules["js/hold-repeat.js"];
+
+let nextGesture = 0;
+
+// Bind a physical target button to pointer/keyboard holds and accessible clicks.
+function bindRepeatButton(button, step) {
+  let pointerId = null;
+  let heldKey = null;
+  let groupId = null;
+  const repeat = new HoldRepeat({ step: () => {
+    const accepted = step(groupId);
+    if (!accepted) button.classList.remove('holding');
+    return accepted;
+  } });
+
+  function start() {
+    groupId = `target-hold-${++nextGesture}`;
+    button.classList.add('holding');
+    repeat.start();
+  }
+
+  function stop() {
+    repeat.stop();
+    button.classList.remove('holding');
+    const captured = pointerId;
+    pointerId = null;
+    heldKey = null;
+    if (captured !== null && button.hasPointerCapture(captured)) button.releasePointerCapture(captured);
+  }
+
+  button.classList.add('repeat-button');
+  button.title = 'Tap for one. Hold to repeat faster.';
+  button.setAttribute('aria-describedby', 'target-hold-help');
+  button.addEventListener('pointerdown', event => {
+    if (event.button !== 0 || pointerId !== null || heldKey !== null) return;
+    event.preventDefault();
+    button.focus();
+    pointerId = event.pointerId;
+    button.setPointerCapture(pointerId);
+    start();
+  });
+  button.addEventListener('pointermove', event => {
+    if (event.pointerId !== pointerId) return;
+    const box = button.getBoundingClientRect();
+    if (event.clientX < box.left || event.clientX > box.right || event.clientY < box.top || event.clientY > box.bottom) stop();
+  });
+  button.addEventListener('pointerup', event => { if (event.pointerId === pointerId) stop(); });
+  button.addEventListener('pointercancel', stop);
+  button.addEventListener('lostpointercapture', () => { if (pointerId !== null) stop(); });
+  button.addEventListener('contextmenu', event => event.preventDefault());
+  button.addEventListener('keydown', event => {
+    if (event.key !== ' ' && event.key !== 'Enter') return;
+    event.preventDefault();
+    if (event.repeat || pointerId !== null || heldKey !== null) return;
+    heldKey = event.key;
+    start();
+  });
+  button.addEventListener('keyup', event => {
+    if (event.key !== heldKey) return;
+    event.preventDefault();
+    stop();
+  });
+  button.addEventListener('blur', stop);
+  button.addEventListener('click', event => {
+    event.preventDefault();
+    // Pointer/keyboard presses already scored on press. A screen-reader activation
+    // or programmatic click without a press sequence remains a single step.
+    if (event.detail === 0 && pointerId === null && heldKey === null) step(undefined);
+  });
+  return stop;
+}
+
+return { bindRepeatButton };
+})();
+
 // Source: js/physical-controls.js
 __modules["js/physical-controls.js"] = (() => {
 const { FIELDS } = __modules["js/scoring.js"];
 
 const { HoldReset } = __modules["js/hold-reset.js"];
+
+const { bindRepeatButton } = __modules["js/repeat-button.js"];
 
 // SW2–SW13 in schematic CSB-001 revision B, sheet 3. Labels only; no GPIO I/O.
 const BUTTON_PINS = { runs: [13, 14, 16], wickets: [17, 18, 19], overs: [21, 22, 32], target: [33, 34, 35] };
@@ -1582,8 +1740,16 @@ function bindPhysicalControls(controller, report) {
       button.className = 'physical-step';
       button.textContent = amount > 0 ? '+' : '−';
       button.setAttribute('aria-label', `Physical: ${amount > 0 ? 'add' : 'subtract'} 1 ${field === 'target' ? 'target' : field === 'runs' ? 'run' : field === 'wickets' ? 'wicket' : 'over'}`);
-      button.addEventListener('click', () => report(controller.dispatch({ type: 'adjust', field, amount }), 'Physical'));
-      button.addEventListener('keydown', event => { if (event.repeat) event.preventDefault(); });
+      if (field === 'target') {
+        cancelCallbacks.push(bindRepeatButton(button, groupId => {
+          const result = controller.dispatch({ type: 'adjust', field, amount, groupId });
+          report(result, 'Physical');
+          return result.ok;
+        }));
+      } else {
+        button.addEventListener('click', () => report(controller.dispatch({ type: 'adjust', field, amount }), 'Physical'));
+        button.addEventListener('keydown', event => { if (event.repeat) event.preventDefault(); });
+      }
       row.append(button);
     }
 
@@ -1816,14 +1982,23 @@ function bindPhoneControls(connection, report, cancelHolds) {
       const choice = inningsForm.elements['target-choice'].value;
       if (!choice) throw new Error('Choose a target before confirming the new innings.');
       // "Keep" means keep the current received controller target, even if a physical edit just changed it.
-      const target = choice === 'keep' ? received.score.target : choice === 'zero' ? 0 : parseScoreInput('target', inningsTarget.value);
-      const result = await send({ type: 'new-innings', target });
+      const command = choice === 'runs-plus-one'
+        ? { type: 'new-innings', targetChoice: 'runs-plus-one' }
+        : { type: 'new-innings', target: choice === 'keep' ? received.score.target : choice === 'zero' ? 0 : parseScoreInput('target', inningsTarget.value) };
+      const result = await send(command);
       if (result.ok) closePanel(inningsDialog);
       else byId('innings-error').textContent = result.message;
     } catch (error) { byId('innings-error').textContent = error.message; }
   });
-  // Keep the displayed choice in sync if hardware changes target while the dialog is open.
-  connection.subscribe(({ snapshot }) => { byId('innings-current-target').textContent = snapshot.score.target; });
+  // Show live target choices; derive runs + 1 in the controller at confirmation.
+  connection.subscribe(({ snapshot }) => {
+    byId('innings-current-target').textContent = snapshot.score.target;
+    const possible = snapshot.score.runs < FIELDS.target.max;
+    byId('innings-chase-target').textContent = possible ? snapshot.score.runs + 1 : '1000 exceeds the 999 limit';
+    const chaseChoice = inningsForm.querySelector('[value="runs-plus-one"]');
+    chaseChoice.disabled = !possible;
+    if (!possible) chaseChoice.checked = false;
+  });
 
 }
 

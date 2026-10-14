@@ -85,13 +85,22 @@ export function bindPhoneControls(connection, report, cancelHolds) {
       const choice = inningsForm.elements['target-choice'].value;
       if (!choice) throw new Error('Choose a target before confirming the new innings.');
       // "Keep" means keep the current received controller target, even if a physical edit just changed it.
-      const target = choice === 'keep' ? received.score.target : choice === 'zero' ? 0 : parseScoreInput('target', inningsTarget.value);
-      const result = await send({ type: 'new-innings', target });
+      const command = choice === 'runs-plus-one'
+        ? { type: 'new-innings', targetChoice: 'runs-plus-one' }
+        : { type: 'new-innings', target: choice === 'keep' ? received.score.target : choice === 'zero' ? 0 : parseScoreInput('target', inningsTarget.value) };
+      const result = await send(command);
       if (result.ok) closePanel(inningsDialog);
       else byId('innings-error').textContent = result.message;
     } catch (error) { byId('innings-error').textContent = error.message; }
   });
-  // Keep the displayed choice in sync if hardware changes target while the dialog is open.
-  connection.subscribe(({ snapshot }) => { byId('innings-current-target').textContent = snapshot.score.target; });
+  // Show live target choices; derive runs + 1 in the controller at confirmation.
+  connection.subscribe(({ snapshot }) => {
+    byId('innings-current-target').textContent = snapshot.score.target;
+    const possible = snapshot.score.runs < FIELDS.target.max;
+    byId('innings-chase-target').textContent = possible ? snapshot.score.runs + 1 : '1000 exceeds the 999 limit';
+    const chaseChoice = inningsForm.querySelector('[value="runs-plus-one"]');
+    chaseChoice.disabled = !possible;
+    if (!possible) chaseChoice.checked = false;
+  });
 
 }

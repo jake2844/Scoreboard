@@ -89,7 +89,10 @@ try {
     return evaluate(`(() => { const element = document.querySelector(${selector(value)}); element.scrollIntoView({ block: 'center' }); const r = element.getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2 }; })()`);
   }
   async function mouseHold(field, milliseconds, moveAway = false) {
-    const point = await center(resetSelector(field));
+    return mouseHoldButton(resetSelector(field), milliseconds, moveAway);
+  }
+  async function mouseHoldButton(button, milliseconds, moveAway = false) {
+    const point = await center(button);
     await send('Input.dispatchMouseEvent', { type: 'mousePressed', ...point, button: 'left', clickCount: 1 });
     await delay(milliseconds);
     if (moveAway) await send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: point.x + 200, y: point.y });
@@ -214,6 +217,118 @@ try {
   assert.equal((await score()).target, 201);
   pass('offline phone is blocked; physical actions continue; reconnect and undo synchronise');
 
+  const targetPlus = '[aria-label="Physical: add 1 target"]';
+  const targetMinus = '[aria-label="Physical: subtract 1 target"]';
+  await mouseHoldButton(targetPlus, 70);
+  assert.equal((await score()).target, 202);
+  await delay(500);
+  assert.equal((await score()).target, 202);
+  await click('#undo');
+  const countBeforeHold = await text('#history-count');
+  await mouseHoldButton(targetPlus, 2300);
+  const heldTarget = (await score()).target;
+  assert.ok(heldTarget > 211);
+  await delay(500);
+  assert.equal((await score()).target, heldTarget);
+  await click('#undo');
+  assert.equal((await score()).target, 201);
+  assert.equal(await text('#history-count'), countBeforeHold);
+  await mouseHoldButton(targetMinus, 700, true);
+  const cancelledTarget = (await score()).target;
+  assert.ok(cancelledTarget < 201);
+  await delay(500);
+  assert.equal((await score()).target, cancelledTarget);
+  await click('#undo');
+  assert.equal((await score()).target, 201);
+  pass('target mouse tap changes one; hold repeats; release/drag stop; undo restores the whole hold');
+
+  await evaluate(`document.querySelector(${selector(targetPlus)}).focus()`);
+  await send('Input.dispatchKeyEvent', { type: 'keyDown', ...key });
+  await delay(700);
+  await send('Input.dispatchKeyEvent', { type: 'keyDown', autoRepeat: true, ...key });
+  await send('Input.dispatchKeyEvent', { type: 'keyUp', ...key });
+  assert.ok((await score()).target > 202);
+  const keyboardTarget = (await score()).target;
+  await delay(500);
+  assert.equal((await score()).target, keyboardTarget);
+  await click('#undo');
+  assert.equal((await score()).target, 201);
+  await evaluate(`document.querySelector(${selector(targetMinus)}).focus()`);
+  const enterKey = { key: 'Enter', code: 'Enter', windowsVirtualKeyCode: 13, nativeVirtualKeyCode: 13 };
+  await send('Input.dispatchKeyEvent', { type: 'keyDown', ...enterKey });
+  await delay(70);
+  await send('Input.dispatchKeyEvent', { type: 'keyUp', ...enterKey });
+  assert.equal((await score()).target, 200);
+  await click('#undo');
+  pass('target keyboard holds repeat; Space/Enter do not duplicate a tap');
+
+  await send('Emulation.setTouchEmulationEnabled', { enabled: true });
+  const targetTouch = await center(targetPlus);
+  await send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ ...targetTouch, id: 0 }] });
+  await delay(1000);
+  await send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+  assert.ok((await score()).target > 202);
+  await click('#undo');
+  assert.equal((await score()).target, 201);
+  await send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ ...targetTouch, id: 0 }] });
+  await delay(600);
+  await send('Input.dispatchTouchEvent', { type: 'touchCancel', touchPoints: [] });
+  const touchCancelled = (await score()).target;
+  await delay(500);
+  assert.equal((await score()).target, touchCancelled);
+  await click('#undo');
+  await send('Emulation.setTouchEmulationEnabled', { enabled: false });
+  pass('target touch holds repeat; release and touch cancellation stop them');
+
+  for (const [start, button, bound] of [[998, targetPlus, 999], [1, targetMinus, 0]]) {
+    await edit('target', start);
+    await mouseHoldButton(button, 1200);
+    assert.equal((await score()).target, bound);
+    await click('#undo');
+    assert.equal((await score()).target, start);
+    await click('#undo');
+    assert.equal((await score()).target, 201);
+  }
+  pass('target hold stops at 0/999 without wrapping or adding failed steps to undo');
+
+  await edit('target', 0);
+  const longHoldPoint = await center(targetPlus);
+  await send('Input.dispatchMouseEvent', { type: 'mousePressed', ...longHoldPoint, button: 'left', clickCount: 1 });
+  const reachDeadline = Date.now() + 10000;
+  while ((await score()).target < 200 && Date.now() < reachDeadline) await delay(20);
+  await send('Input.dispatchMouseEvent', { type: 'mouseReleased', ...longHoldPoint, button: 'left', clickCount: 1 });
+  assert.ok((await score()).target >= 200, 'A continuous hold should reach 200 within ten seconds.');
+  await click('#undo');
+  assert.equal((await score()).target, 0);
+  await click('#undo');
+  assert.equal((await score()).target, 201);
+  pass('one accelerated hold reaches a target of 200 and undoes in one action');
+
+  await click('#toggle-connection');
+  await mouseHoldButton(targetPlus, 700);
+  assert.equal((await score()).target, 201);
+  await click('#toggle-connection');
+  assert.ok((await score()).target > 202);
+  await click('#undo');
+  assert.equal((await score()).target, 201);
+  pass('target holds continue while phone is offline and synchronise on reconnect');
+
+  const beforeChase = await score();
+  await click('#new-innings');
+  assert.equal(Number(await text('#innings-chase-target')), beforeChase.runs + 1);
+  await click('[name="target-choice"][value="runs-plus-one"]');
+  assert.deepEqual(await score(), beforeChase, 'Choosing an option must not reset scores before confirmation.');
+  await click('[aria-label="Physical: add 1 run"]');
+  assert.equal(Number(await text('#innings-chase-target')), beforeChase.runs + 2);
+  const beforeChaseConfirmation = await score();
+  await click('#innings-form [type="submit"]');
+  assert.deepEqual(await score(), { runs: 0, wickets: 0, overs: 0, target: beforeChaseConfirmation.runs + 1 });
+  await click('#undo');
+  assert.deepEqual(await score(), beforeChaseConfirmation);
+  await click('#undo');
+  assert.deepEqual(await score(), beforeChase);
+  pass('new innings uses current runs + 1 at confirmation, displays live changes, and undoes atomically');
+
   await edit('runs', 999);
   await edit('wickets', 10);
   await edit('overs', 99);
@@ -235,6 +350,8 @@ try {
   pass('320, 390, 768, 1280 and 1440px layouts fit; buttons meet 44px minimum height');
 
   await click('#new-innings');
+  assert.equal(await evaluate('document.querySelector("[name=target-choice][value=runs-plus-one]").disabled'), true);
+  assert.match(await text('#innings-chase-target'), /exceeds/);
   await click('#innings-form [type="submit"]');
   assert.match(await text('#innings-error'), /Choose a target/);
   await click('#innings-dialog [data-close-dialog]');

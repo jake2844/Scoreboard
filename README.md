@@ -25,10 +25,11 @@ Everything happens in the browser. The Python command only serves static files. 
 
 - The physical display uses leading zeroes: three runs digits, two wickets digits, two whole-overs digits, and three target digits. **TO WIN is the fixed target**, never runs remaining.
 - Phone buttons add 1, 4 or 6 runs, or subtract 1. Wickets and overs change by one. **Set target** edits the target; **Edit score** corrects any of the four fields. Both open forms directly inside the phone controls, so they do not depend on browser pop-up dialogs. Save applies the correction; Cancel or Escape closes the form.
-- All twelve physical buttons use the same rules. Plus/minus changes one unit. A reset needs a continuous **2-second hold** with a visible progress indicator. Early release, moving outside the button, pointer cancellation, loss of focus or leaving the tab cancels it. A tap does nothing. Mouse, touch, and focused Space/Enter holds work; keyboard repeat does not restart or repeat a reset.
+- All twelve physical buttons use the same rules. Plus/minus changes one unit. **Target +/− can be held to repeat**: one unit immediately, a 400 ms delay, then repeated one-unit steps that accelerate after 2 and 4 seconds. Release, move outside, cancel the touch, lose focus or leave the tab to stop. Mouse, touch and focused Space/Enter work. Repeating stops at 0/999. Undo reverses the entire hold; an intervening scoring action splits a hold into separate history entries so undo preserves that action.
+- A reset needs a continuous **2-second hold** with a visible progress indicator. Early release, moving outside the button, pointer cancellation, loss of focus or leaving the tab cancels it. A tap does nothing. Mouse, touch, and focused Space/Enter holds work; keyboard repeat does not restart or repeat a reset.
 - Bounds: runs/target 0–999, wickets 0–10, overs 0–99. Invalid values or boundary-crossing actions are rejected in full; values never wrap or silently clamp.
 - **Undo** restores the whole last action, including physical adjustments, resets, direct edits and new innings. Undoing +6 removes six runs. No-op changes do not add history.
-- **New innings** requires confirmation and an explicit target choice: keep the current target, clear it to zero, or enter a new target. Runs, wickets and overs reset together. Zero represents an unset target; the field still displays 000.
+- **New innings** requires confirmation and an explicit target choice: **use current runs + 1**, keep the current target, clear it to zero, or enter a new target. For example, 199 runs becomes a fixed target of 200. The runs + 1 choice uses the controller's current runs when confirmed; it is unavailable at 999 runs because 1000 will not fit the target display. Runs, wickets and overs reset together. Undo restores the complete previous innings. Zero represents an unset target; the field still displays 000.
 - **Disconnect phone** freezes the phone's last received display and blocks its commands. Physical controls continue working. Reconnecting fetches the current controller score and history; offline commands are never queued.
 - Score and undo history survive a refresh via `localStorage`, using key `cricket-scoreboard-simulator.v1`. Use the same browser/origin/port to restore them. **Clear saved simulation data** confirms, clears all fields and history, and removes only this app's saved entry. It cannot be undone. Storage failures show a warning and allow scoring in memory.
 
@@ -64,6 +65,7 @@ This dependency-free runner uses Node's built-in WebSocket and Chromium's DevToo
 | `js/controller.js` | Single simulated ESP32 source of truth; accepts commands, saves state, broadcasts snapshots |
 | `js/phone-connection.js` | Explicit in-process phone transport, disconnect gating and reconnection snapshot |
 | `js/hold-reset.js` | Testable monotonic two-second hold timer |
+| `js/hold-repeat.js`, `js/repeat-button.js` | Accelerated target repeats and pointer/keyboard press handling |
 | `js/physical-controls.js` | Twelve buttons, pointer/keyboard handling, switch/GPIO labels |
 | `js/phone-controls.js` | Phone buttons, validated corrections and confirmation dialogs |
 | `js/panels.js` | In-page edit/confirmation forms with focus and cancel handling, including embedded viewers without native dialog APIs |
@@ -82,10 +84,13 @@ Command examples:
 { type: 'set', field: 'target', value: 201 }
 { type: 'reset', field: 'overs' }
 { type: 'new-innings', target: 124 }
+{ type: 'new-innings', targetChoice: 'runs-plus-one' }
 { type: 'undo' }
 ```
 
 Every command returns `{ ok, message, ... }`. Successful replies include `changed` and a snapshot with `{ score, canUndo, undoLabel, historyCount }`. `subscribe(callback)` immediately supplies the current snapshot and then every update. A successful reset command is generated only after the physical input layer has verified the continuous hold.
+
+Target repeat commands carry a `groupId` for each press. The engine combines consecutive steps with that ID into one undo entry, while broadcasting and saving every new value. Group tracking is runtime-only; the resulting score and undo entry are persisted normally. Any intervening successful action ends the group.
 
 ## Later: ESP32 connection
 

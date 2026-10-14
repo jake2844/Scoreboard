@@ -1,5 +1,6 @@
 import { FIELDS } from './scoring.js';
 import { HoldReset } from './hold-reset.js';
+import { bindRepeatButton } from './repeat-button.js';
 
 // SW2–SW13 in schematic CSB-001 revision B, sheet 3. Labels only; no GPIO I/O.
 const BUTTON_PINS = { runs: [13, 14, 16], wickets: [17, 18, 19], overs: [21, 22, 32], target: [33, 34, 35] };
@@ -26,8 +27,16 @@ export function bindPhysicalControls(controller, report) {
       button.className = 'physical-step';
       button.textContent = amount > 0 ? '+' : '−';
       button.setAttribute('aria-label', `Physical: ${amount > 0 ? 'add' : 'subtract'} 1 ${field === 'target' ? 'target' : field === 'runs' ? 'run' : field === 'wickets' ? 'wicket' : 'over'}`);
-      button.addEventListener('click', () => report(controller.dispatch({ type: 'adjust', field, amount }), 'Physical'));
-      button.addEventListener('keydown', event => { if (event.repeat) event.preventDefault(); });
+      if (field === 'target') {
+        cancelCallbacks.push(bindRepeatButton(button, groupId => {
+          const result = controller.dispatch({ type: 'adjust', field, amount, groupId });
+          report(result, 'Physical');
+          return result.ok;
+        }));
+      } else {
+        button.addEventListener('click', () => report(controller.dispatch({ type: 'adjust', field, amount }), 'Physical'));
+        button.addEventListener('keydown', event => { if (event.repeat) event.preventDefault(); });
+      }
       row.append(button);
     }
 

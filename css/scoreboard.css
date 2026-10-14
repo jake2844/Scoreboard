@@ -162,6 +162,18 @@
   background: #f3f5ef;
 }
 
+.repeat-button {
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.repeat-button.holding {
+  background: #ceddcc;
+  border-color: #61835b;
+}
+
 .hold-button {
   position: relative;
   overflow: hidden;

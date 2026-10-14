@@ -44,6 +44,7 @@
           <p class="panel-description">Press + or − once. Hold a reset for 2 seconds.</p>
           <div id="physical-controls"></div>
           <p class="physical-help">Release early to cancel. Use a mouse, touch, or focus a reset and hold Space / Enter.</p>
+          <p class="physical-help" id="target-hold-help">Target +/−: tap for one, or hold to repeat faster. Release to stop.</p>
         </section>
       </section>
 
@@ -84,6 +85,7 @@
             <form id="innings-form" novalidate>
               <p class="eyebrow">A FRESH START</p><h2 id="innings-title">Start a new innings?</h2><p>Runs, wickets and overs will return to zero. Choose the target explicitly. The whole action can be undone.</p>
               <fieldset class="target-choices"><legend>Target for this innings</legend>
+                <label><input type="radio" name="target-choice" value="runs-plus-one"> Use current runs + 1 (<span id="innings-chase-target">1</span>)</label>
                 <label><input type="radio" name="target-choice" value="keep"> Keep current target (<span id="innings-current-target">0</span>)</label>
                 <label><input type="radio" name="target-choice" value="zero"> Clear target to 0</label>
                 <label><input type="radio" name="target-choice" value="custom"> Set a new target</label>
